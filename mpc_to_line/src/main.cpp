@@ -54,7 +54,7 @@ int main() {
   vector<double> delta_vals = {};
   vector<double> a_vals = {};
 
-  for (size_t i = 0; i < iters; ++i) {
+  for (int i = 0; i < iters; ++i) {
     // cout << "Iteration " << i << endl;
 
     auto vars = mpc.Solve(state, coeffs);
@@ -103,8 +103,8 @@ int main() {
   plt::title("Delta (Radians)");
   plt::plot(delta_vals);
   plt::subplot(3, 1, 3);
-  plt::title("Velocity");
-  plt::plot(v_vals);
+  plt::title("Accel m/s^2");
+  plt::plot(a_vals);
 
   plt::show();
 }

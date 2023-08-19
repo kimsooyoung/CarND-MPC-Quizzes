@@ -65,18 +65,18 @@ class FG_eval {
      *   anything you think may be beneficial.
      */
 
-    // for (int t = 0; t < N; ++t) {
-    //   fg[0] += CppAD::pow(vars[cte_start + t], 2);
-    //   fg[0] += CppAD::pow(vars[epsi_start + t], 2);
-    //   fg[0] += CppAD::pow(vars[v_start + t] - ref_v, 2);
-    // }
+    for (int t = 0; t < N; ++t) {
+      fg[0] += CppAD::pow(vars[cte_start + t], 2);
+      fg[0] += CppAD::pow(vars[epsi_start + t], 2);
+      fg[0] += CppAD::pow(vars[v_start + t] - ref_v, 2);
+    }
 
-    for (int i = 0; i < N - 1; i++){
+    for (size_t i = 0; i < N - 1; i++){
       fg[0] += CppAD::pow(vars[delta_start + i], 2);
       fg[0] += CppAD::pow(vars[a_start + i], 2);
     }
 
-    for (int i = 0; i < N - 2; i++){
+    for (size_t i = 0; i < N - 2; i++){
       fg[0] += CppAD::pow(vars[delta_start + i + 1] - vars[delta_start + i], 2);
       fg[0] += CppAD::pow(vars[a_start + i + 1] - vars[a_start + i], 2);
     }
@@ -99,7 +99,7 @@ class FG_eval {
     fg[1 + epsi_start] = vars[epsi_start];
 
     // The rest of the constraints
-    for (int t = 1; t < N; ++t) {
+    for (size_t t = 1; t < N; ++t) {
       /**
        * TODO: Grab the rest of the states at t+1 and t.
        *   We have given you parts of these states below.
@@ -135,12 +135,19 @@ class FG_eval {
       fg[1 + psi_start + t] = psi1 - (psi0 + v0 * delta0 / Lf * dt);
       fg[1 + v_start + t] = v1 - (v0 + a0 * dt);
       
-      AD<double> psi_des = CppAD::atan(coeffs[1]);
-      fg[1 + epsi_start] = epsi1 - ((psi0 - psi_des) + v0 * delta0 / Lf * dt); 
+      // 1st order tajectory
+      // f(x) = a0 + a1 * x
+      //
+      // 3rd order trajectory
+      // f(x) = a0 + a1 * x + a2 * x^2 + a3 * x^3
+      // f'(x) = a1 + 2 * a2 * x + 3 * a3 * x^2
+      AD<double> psi_des = CppAD::atan(coeffs[1] + coeffs[2] * x0 + coeffs[3] * x0 * x0);
+      fg[1 + epsi_start + t] = epsi1 - ((psi0 - psi_des) + v0 * delta0 / Lf * dt); 
       
-      AD<double> f_x = coeffs[0] + coeffs[1] * x0;
-      fg[1 + cte_start] = cte1 - (f_x - y0 + v0 * CppAD::sin(epsi0) * dt);
+      AD<double> f_x = coeffs[0] + coeffs[1] * x0 + coeffs[2] * x0 * x0 + coeffs[3] * x0 * x0 * x0;
+      fg[1 + cte_start + t] = cte1 - (f_x - y0 + v0 * CppAD::sin(epsi0) * dt);
     }
+    // fg[]
   }
 };
 
@@ -170,7 +177,7 @@ std::vector<double> MPC::Solve(const VectorXd &x0, const VectorXd &coeffs) {
   // Initial value of the independent variables.
   // Should be 0 except for the initial values.
   Dvector vars(n_vars);
-  for (int i = 0; i < n_vars; ++i) {
+  for (size_t i = 0; i < n_vars; ++i) {
     vars[i] = 0.0;
   }
   // Set the initial variable values
@@ -187,7 +194,7 @@ std::vector<double> MPC::Solve(const VectorXd &x0, const VectorXd &coeffs) {
 
   // Set all non-actuators upper and lowerlimits
   // to the max negative and positive values.
-  for (int i = 0; i < delta_start; ++i) {
+  for (size_t i = 0; i < delta_start; ++i) {
     vars_lowerbound[i] = -1.0e19;
     vars_upperbound[i] = 1.0e19;
   }
@@ -195,14 +202,14 @@ std::vector<double> MPC::Solve(const VectorXd &x0, const VectorXd &coeffs) {
   // The upper and lower limits of delta are set to -25 and 25
   // degrees (values in radians).
   // NOTE: Feel free to change this to something else.
-  for (int i = delta_start; i < a_start; ++i) {
+  for (size_t i = delta_start; i < a_start; ++i) {
     vars_lowerbound[i] = -0.436332;
     vars_upperbound[i] = 0.436332;
   }
 
   // Acceleration/decceleration upper and lower limits.
   // NOTE: Feel free to change this to something else.
-  for (int i = a_start; i < n_vars; ++i) {
+  for (size_t i = a_start; i < n_vars; ++i) {
     vars_lowerbound[i] = -1.0;
     vars_upperbound[i] = 1.0;
   }
@@ -212,7 +219,7 @@ std::vector<double> MPC::Solve(const VectorXd &x0, const VectorXd &coeffs) {
   // state indices.
   Dvector constraints_lowerbound(n_constraints);
   Dvector constraints_upperbound(n_constraints);
-  for (int i = 0; i < n_constraints; ++i) {
+  for (size_t i = 0; i < n_constraints; ++i) {
     constraints_lowerbound[i] = 0;
     constraints_upperbound[i] = 0;
   }
@@ -255,7 +262,7 @@ std::vector<double> MPC::Solve(const VectorXd &x0, const VectorXd &coeffs) {
   ok &= solution.status == CppAD::ipopt::solve_result<Dvector>::success;
   
   auto cost = solution.obj_value;
-  // std::cout << "Cost " << cost << std::endl;
+  std::cout << "Cost " << cost << std::endl;
   return {solution.x[x_start + 1],   solution.x[y_start + 1],
           solution.x[psi_start + 1], solution.x[v_start + 1],
           solution.x[cte_start + 1], solution.x[epsi_start + 1],
