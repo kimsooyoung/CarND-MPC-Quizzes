@@ -11,14 +11,19 @@ set(CMAKE_CXX_FLAGS "${CXX_FLAGS}")
 
 set(sources src/MPC.cpp src/main.cpp)
 
-include_directories(src/Eigen-3.3)
-include_directories(/usr/local/include)
-link_directories(/usr/local/lib)
+# Find the Python3 package
+find_package(Eigen3 REQUIRED)
+find_package(Python3 REQUIRED)
+find_package (Python3 COMPONENTS Interpreter Development)
+
+# include_directories(src/Eigen-3.3)
+include_directories(
+    include
+    ${EIGEN3_INCLUDE_DIRS}
+)
 
 add_executable(mpc ${sources})
+target_include_directories(mpc PRIVATE ${Python3_INCLUDE_DIRS})
+target_link_libraries(mpc PRIVATE Python3::Python ipopt)
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-target_link_libraries(mpc ipopt python2.7)
-else()
-target_link_libraries(mpc ipopt python)
-endif()
+add_executable(sys_info src/sys_info.cpp)

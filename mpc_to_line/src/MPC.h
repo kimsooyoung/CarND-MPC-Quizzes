@@ -2,7 +2,8 @@
 #define MPC_H
 
 #include <vector>
-#include "Eigen-3.3/Eigen/Core"
+#include <Eigen/Core>
+// #include "Eigen-3.3/Eigen/Core"
 
 class MPC {
  public:

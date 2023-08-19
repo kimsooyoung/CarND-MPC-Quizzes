@@ -1,7 +1,7 @@
 #ifndef HELPERS_H
 #define HELPERS_H
 
-#include "Eigen-3.3/Eigen/Core"
+#include <Eigen/Core>
 
 using Eigen::VectorXd;
 
