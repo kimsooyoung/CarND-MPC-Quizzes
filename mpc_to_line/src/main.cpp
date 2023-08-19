@@ -15,7 +15,7 @@ int main() {
 
   MPC mpc;
   // int iters = 50;
-  int iters = 20;
+  int iters = 1;
 
   // multi point passing trajectory 
   VectorXd xvals(5);

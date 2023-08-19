@@ -148,6 +148,11 @@ class FG_eval {
       fg[1 + cte_start + t] = cte1 - (f_x - y0 + v0 * CppAD::sin(epsi0) * dt);
     }
     // fg[]
+    std::cout << "fg.size() " << fg.size() << std::endl;
+    for(auto i : fg){
+      std::cout << i << std::endl;
+    }
+    std::cout << "done" << std::endl;
   }
 };
 
@@ -238,6 +243,8 @@ std::vector<double> MPC::Solve(const VectorXd &x0, const VectorXd &coeffs) {
   constraints_upperbound[cte_start] = cte;
   constraints_upperbound[epsi_start] = epsi;
 
+  std::cout << "constraints_upperbound.size() : " << constraints_upperbound.size() << std::endl;
+
   // Object that computes objective and constraints
   FG_eval fg_eval(coeffs);
 
@@ -263,7 +270,6 @@ std::vector<double> MPC::Solve(const VectorXd &x0, const VectorXd &coeffs) {
   
   auto cost = solution.obj_value;
   std::cout << "Cost " << cost << std::endl;
-
   std::cout << solution.x.size() << std::endl;
 
   return {solution.x[x_start + 1],   solution.x[y_start + 1],

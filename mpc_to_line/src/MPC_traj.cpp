@@ -16,7 +16,7 @@ using Eigen::VectorXd;
  * TODO: Set N and dt
  */
 size_t N = 5;
-AD<double> dt = 0.1;
+AD<double> dt = 0.2;
 
 // This value assumes the model presented in the classroom is used.
 //
@@ -55,7 +55,7 @@ class FG_eval {
   // `fg` is a vector containing the cost and constraints.
   // `vars` is a vector containing the variable values (state & actuators).
   void operator()(ADvector& fg, const ADvector& vars) {
-    assert( fg.size() == 1 + N * 6 + (N - 1) * 3);
+    assert( fg.size() == 1 + N * 6);
     assert( vars.size() == N * 6 + (N - 1) * 2 + 1);
 
     // The cost is stored is the first element of `fg`.
@@ -68,21 +68,21 @@ class FG_eval {
      *   anything you think may be beneficial.
      */
 
-    for (size_t t = 0; t < N; ++t) {
-      fg[0] += CppAD::pow(vars[cte_start + t], 2);
-      fg[0] += CppAD::pow(vars[epsi_start + t], 2);
-      fg[0] += CppAD::pow(vars[v_start + t] - ref_v, 2);
-    }
+    // for (size_t t = 0; t < N; ++t) {
+    //   fg[0] += CppAD::pow(vars[cte_start + t], 2);
+    //   fg[0] += CppAD::pow(vars[epsi_start + t], 2);
+    //   fg[0] += CppAD::pow(vars[v_start + t] - ref_v, 2);
+    // }
 
-    for (size_t i = 0; i < N - 1; i++){
-      fg[0] += CppAD::pow(vars[delta_start + i], 2);
-      fg[0] += CppAD::pow(vars[a_start + i], 2);
-    }
+    // for (size_t i = 0; i < N - 1; i++){
+    //   fg[0] += CppAD::pow(vars[delta_start + i], 2);
+    //   fg[0] += CppAD::pow(vars[a_start + i], 2);
+    // }
 
-    for (size_t i = 0; i < N - 2; i++){
-      fg[0] += CppAD::pow(vars[delta_start + i + 1] - vars[delta_start + i], 2);
-      fg[0] += CppAD::pow(vars[a_start + i + 1] - vars[a_start + i], 2);
-    }
+    // for (size_t i = 0; i < N - 2; i++){
+    //   fg[0] += CppAD::pow(vars[delta_start + i + 1] - vars[delta_start + i], 2);
+    //   fg[0] += CppAD::pow(vars[a_start + i + 1] - vars[a_start + i], 2);
+    // }
 
     //
     // Setup Constraints
@@ -105,9 +105,7 @@ class FG_eval {
 
     // The rest of the constraints
     for (size_t t = 1; t < N; ++t) {
-      
-      std::cout << "current_time " << current_time << std::endl;
-      
+            
       /**
        * TODO: Grab the rest of the states at t+1 and t.
        *   We have given you parts of these states below.
@@ -149,24 +147,35 @@ class FG_eval {
       // 3rd order trajectory
       // f(x) = a0 + a1 * x + a2 * x^2 + a3 * x^3
       // f'(x) = a1 + 2 * a2 * x + 3 * a3 * x^2
-      AD<double> psi_des = CppAD::atan(coeffs[1] + coeffs[2] * x0 + coeffs[3] * x0 * x0);
+      AD<double> psi_des = CppAD::atan(coeffs[1] + 2 * coeffs[2] * x0 + 3 * coeffs[3] * x0 * x0);
       fg[1 + epsi_start + t] = epsi1 - ((psi0 - psi_des) + v0 * delta0 / Lf * dt); 
       
       AD<double> f_x = coeffs[0] + coeffs[1] * x0 + coeffs[2] * x0 * x0 + coeffs[3] * x0 * x0 * x0;
       fg[1 + cte_start + t] = cte1 - (f_x - y0 + v0 * CppAD::sin(epsi0) * dt);
       
-      // x_ref 
-      fg[1 + 6*N] = x1 - dt;
-      
+      // traj following mpc start
+      std::cout << "current_time " << current_time << std::endl;
+
+      // x_ref
+      fg[0] += CppAD::pow(x1 - current_time, 2);
       // y_ref
       AD<double> f_y = coeffs[0] + coeffs[1] * x1 + coeffs[2] * x1 * x1 + coeffs[3] * x1 * x1 * x1;
-      fg[1 + 6*N + (N - 1)] = y1 - f_y;
-      
+      fg[0] += CppAD::pow(y1 - f_y, 2);
       // theta_ref
-      fg[1 + 6*N + 2 * (N - 1)] = psi1 - 0;
+      // fg[0] += CppAD::pow(psi1, 2);
+
+      // fg[1 + 6*N] = x1 - current_time;
+      // fg[1 + 6*N + (N - 1)] = y1 - f_y;
+      // fg[1 + 6*N + 2 * (N - 1)] = psi1 - 0;
 
       current_time += dt;
     }
+
+    // std::cout << "fg.size() " << fg.size() << std::endl;
+    // for(auto i : fg){
+    //   std::cout << i << std::endl;
+    // }
+    // std::cout << "done" << std::endl;
   }
 };
 
@@ -194,8 +203,8 @@ std::vector<double> MPC::Solve(const VectorXd &x0, const VectorXd &coeffs) {
   size_t n_vars = N * 6 + (N - 1) * 2 + 1;
   // Number of constraints
   // trajectory added
-  // size_t n_constraints = N * 6;
-  size_t n_constraints = N * 6 + (N - 1) * 3;
+  size_t n_constraints = N * 6;
+  // size_t n_constraints = N * 6 + (N - 1) * 3;
 
   // Initial value of the independent variables.
   // Should be 0 except for the initial values.
@@ -265,8 +274,6 @@ std::vector<double> MPC::Solve(const VectorXd &x0, const VectorXd &coeffs) {
   constraints_upperbound[cte_start] = cte;
   constraints_upperbound[epsi_start] = epsi;
 
-  std::cout << constraints_upperbound.size() << std::endl;
-
   // Object that computes objective and constraints
   FG_eval fg_eval(coeffs);
 
@@ -294,13 +301,8 @@ std::vector<double> MPC::Solve(const VectorXd &x0, const VectorXd &coeffs) {
   auto cost = solution.obj_value;
   std::cout << "Cost " << cost << std::endl;
 
-  std::cout << solution.x.size() << std::endl;
-
-  std::vector<double> result;
-  return result;
-
-  // return {solution.x[x_start + 1],   solution.x[y_start + 1],
-  //         solution.x[psi_start + 1], solution.x[v_start + 1],
-  //         solution.x[cte_start + 1], solution.x[epsi_start + 1],
-  //         solution.x[delta_start],   solution.x[a_start]};
+  return {solution.x[x_start + 1],   solution.x[y_start + 1],
+          solution.x[psi_start + 1], solution.x[v_start + 1],
+          solution.x[cte_start + 1], solution.x[epsi_start + 1],
+          solution.x[delta_start],   solution.x[a_start]};
 }

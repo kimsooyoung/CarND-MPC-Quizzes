@@ -26,4 +26,8 @@ add_executable(mpc ${sources})
 target_include_directories(mpc PRIVATE ${Python3_INCLUDE_DIRS})
 target_link_libraries(mpc PRIVATE Python3::Python ipopt)
 
+add_executable(mpc_traj src/MPC_traj.cpp src/main_traj.cpp)
+target_include_directories(mpc_traj PRIVATE ${Python3_INCLUDE_DIRS})
+target_link_libraries(mpc_traj PRIVATE Python3::Python ipopt)
+
 add_executable(sys_info src/sys_info.cpp)
