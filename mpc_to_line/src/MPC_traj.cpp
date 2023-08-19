@@ -55,6 +55,9 @@ class FG_eval {
   // `fg` is a vector containing the cost and constraints.
   // `vars` is a vector containing the variable values (state & actuators).
   void operator()(ADvector& fg, const ADvector& vars) {
+    assert( fg.size() == 1 + N * 6 + (N - 1) * 3);
+    assert( vars.size() == N * 6 + (N - 1) * 2 + 1);
+
     // The cost is stored is the first element of `fg`.
     // Any additions to the cost should be added to `fg[0]`.
     fg[0] = 0;
@@ -98,8 +101,13 @@ class FG_eval {
     fg[1 + cte_start] = vars[cte_start];
     fg[1 + epsi_start] = vars[epsi_start];
 
+    auto current_time = vars[N * 6 + (N - 1) * 2];
+
     // The rest of the constraints
     for (size_t t = 1; t < N; ++t) {
+      
+      std::cout << "current_time " << current_time << std::endl;
+      
       /**
        * TODO: Grab the rest of the states at t+1 and t.
        *   We have given you parts of these states below.
@@ -146,8 +154,19 @@ class FG_eval {
       
       AD<double> f_x = coeffs[0] + coeffs[1] * x0 + coeffs[2] * x0 * x0 + coeffs[3] * x0 * x0 * x0;
       fg[1 + cte_start + t] = cte1 - (f_x - y0 + v0 * CppAD::sin(epsi0) * dt);
+      
+      // x_ref 
+      fg[1 + 6*N] = x1 - dt;
+      
+      // y_ref
+      AD<double> f_y = coeffs[0] + coeffs[1] * x1 + coeffs[2] * x1 * x1 + coeffs[3] * x1 * x1 * x1;
+      fg[1 + 6*N + (N - 1)] = y1 - f_y;
+      
+      // theta_ref
+      fg[1 + 6*N + 2 * (N - 1)] = psi1 - 0;
+
+      current_time += dt;
     }
-    // fg[]
   }
 };
 
@@ -167,12 +186,16 @@ std::vector<double> MPC::Solve(const VectorXd &x0, const VectorXd &coeffs) {
   double v = x0[3];
   double cte = x0[4];
   double epsi = x0[5];
+  double t = x0[6];
 
   // number of independent variables
   // N timesteps == N - 1 actuations
-  size_t n_vars = N * 6 + (N - 1) * 2;
+  // time t added for trajectory
+  size_t n_vars = N * 6 + (N - 1) * 2 + 1;
   // Number of constraints
-  size_t n_constraints = N * 6;
+  // trajectory added
+  // size_t n_constraints = N * 6;
+  size_t n_constraints = N * 6 + (N - 1) * 3;
 
   // Initial value of the independent variables.
   // Should be 0 except for the initial values.
@@ -180,6 +203,7 @@ std::vector<double> MPC::Solve(const VectorXd &x0, const VectorXd &coeffs) {
   for (size_t i = 0; i < n_vars; ++i) {
     vars[i] = 0.0;
   }
+
   // Set the initial variable values
   vars[x_start] = x;
   vars[y_start] = y;
@@ -187,6 +211,7 @@ std::vector<double> MPC::Solve(const VectorXd &x0, const VectorXd &coeffs) {
   vars[v_start] = v;
   vars[cte_start] = cte;
   vars[epsi_start] = epsi;
+  vars[n_vars - 1] = t; 
 
   // Lower and upper limits for x
   Dvector vars_lowerbound(n_vars);
@@ -213,6 +238,8 @@ std::vector<double> MPC::Solve(const VectorXd &x0, const VectorXd &coeffs) {
     vars_lowerbound[i] = -1.0;
     vars_upperbound[i] = 1.0;
   }
+  vars_lowerbound[n_vars - 1] = t; 
+  vars_upperbound[n_vars - 1] = t; 
 
   // Lower and upper limits for constraints
   // All of these should be 0 except the initial
@@ -238,6 +265,8 @@ std::vector<double> MPC::Solve(const VectorXd &x0, const VectorXd &coeffs) {
   constraints_upperbound[cte_start] = cte;
   constraints_upperbound[epsi_start] = epsi;
 
+  std::cout << constraints_upperbound.size() << std::endl;
+
   // Object that computes objective and constraints
   FG_eval fg_eval(coeffs);
 
@@ -249,6 +278,7 @@ std::vector<double> MPC::Solve(const VectorXd &x0, const VectorXd &coeffs) {
 
   // place to return solution
   CppAD::ipopt::solve_result<Dvector> solution;
+
 
   // solve the problem
   CppAD::ipopt::solve<Dvector, FG_eval>(
@@ -266,8 +296,11 @@ std::vector<double> MPC::Solve(const VectorXd &x0, const VectorXd &coeffs) {
 
   std::cout << solution.x.size() << std::endl;
 
-  return {solution.x[x_start + 1],   solution.x[y_start + 1],
-          solution.x[psi_start + 1], solution.x[v_start + 1],
-          solution.x[cte_start + 1], solution.x[epsi_start + 1],
-          solution.x[delta_start],   solution.x[a_start]};
+  std::vector<double> result;
+  return result;
+
+  // return {solution.x[x_start + 1],   solution.x[y_start + 1],
+  //         solution.x[psi_start + 1], solution.x[v_start + 1],
+  //         solution.x[cte_start + 1], solution.x[epsi_start + 1],
+  //         solution.x[delta_start],   solution.x[a_start]};
 }
