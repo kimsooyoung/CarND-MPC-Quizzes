@@ -28,11 +28,11 @@ namespace {
       AD<double> x2 = x[1];
       AD<double> x3 = x[2];
       AD<double> x4 = x[3];
-      // f(x)
+      // fg[0] is always cost function f(x)
       fg[0] = x1 * x4 * (x1 + x2 + x3) + x3;
-      // g_1 (x)
+      // constraint 1. g_1 (x)
       fg[1] = x1 * x2 * x3 * x4;
-      // g_2 (x)
+      // constraint 2. g_2 (x)
       fg[2] = x1 * x1 + x2 * x2 + x3 * x3 + x4 * x4;
       //
       return;
@@ -52,6 +52,7 @@ bool ipopt_get_started(void)
   size_t ng = 2;
   // initial value of the independent variables
   Dvector xi(nx);
+  //  1 <= x1, x2, x3, x4 <= 5
   xi[0] = 1.0;
   xi[1] = 5.0;
   xi[2] = 5.0;

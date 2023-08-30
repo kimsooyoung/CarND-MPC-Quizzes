@@ -12,34 +12,28 @@ using std::endl;
 using std::vector;
 
 int main() {
-
   MPC mpc;
-  // int iters = 50;
-  int iters = 1;
+  int iters = 50;
 
-  // multi point passing trajectory 
-  VectorXd xvals(5);
-  VectorXd yvals(5);
+  VectorXd ptsx(2);
+  VectorXd ptsy(2);
+  ptsx << -100, 100;
+  ptsy << -1, -1;
 
-  // (0, 0) (5, 25) (10, 12.51) (15, 0) (20, 25)
-  // y = a0 + a1x + a2x^2 + a3x^3
-  xvals << 0.0, 5.0, 10.0, 15.0, 20.0;
-  yvals << 0.0, 25.0, 12.51, 0.0, 25.0;
-  auto coeffs = polyfit(xvals, yvals, 3);
+  // The polynomial is fitted to a straight line so a polynomial with
+  // order 1 is sufficient.
+  auto coeffs = polyfit(ptsx, ptsy, 1);
 
-  // initial state setup
   // NOTE: free feel to play around with these
   double x = -1;
   double y = 10;
   double psi = 0;
   double v = 10;
-  /**
-   * TODO: calculate the cross track error
-   */
+  // The cross track error is calculated by evaluating at polynomial at x, f(x)
+  // and subtracting y.
   double cte = polyeval(coeffs, x) - y;
-  /**
-   * TODO: calculate the orientation error
-   */
+  // Due to the sign starting at 0, the orientation error is -f'(x).
+  // derivative of coeffs[0] + coeffs[1] * x -> coeffs[1]
   double epsi = psi - atan(coeffs[1]);
 
   VectorXd state(6);
@@ -54,8 +48,8 @@ int main() {
   vector<double> delta_vals = {};
   vector<double> a_vals = {};
 
-  for (int i = 0; i < iters; ++i) {
-    // cout << "Iteration " << i << endl;
+  for (size_t i = 0; i < iters; ++i) {
+    cout << "Iteration " << i << endl;
 
     auto vars = mpc.Solve(state, coeffs);
 
@@ -70,16 +64,17 @@ int main() {
     a_vals.push_back(vars[7]);
 
     state << vars[0], vars[1], vars[2], vars[3], vars[4], vars[5];
-    // cout << "x = " << vars[0] << endl;
-    // cout << "y = " << vars[1] << endl;
-    // cout << "psi = " << vars[2] << endl;
-    // cout << "v = " << vars[3] << endl;
-    // cout << "cte = " << vars[4] << endl;
-    // cout << "epsi = " << vars[5] << endl;
-    // cout << "delta = " << vars[6] << endl;
-    // cout << "a = " << vars[7] << endl;
-    // cout << endl;
+    cout << "x = " << vars[0] << endl;
+    cout << "y = " << vars[1] << endl;
+    cout << "psi = " << vars[2] << endl;
+    cout << "v = " << vars[3] << endl;
+    cout << "cte = " << vars[4] << endl;
+    cout << "epsi = " << vars[5] << endl;
+    cout << "delta = " << vars[6] << endl;
+    cout << "a = " << vars[7] << endl;
+    cout << endl;
   }
+
 
   // TODO: matplotlibcpp  https://statphys.pknu.ac.kr/dokuwiki/doku.php?id=c:c_%EC%97%90_matplotlib_%EB%9D%BC%EC%9D%B4%EB%B8%8C%EB%9F%AC%EB%A6%AC_%EC%B6%94%EA%B0%80%ED%95%B4%EC%84%9C_%EA%B7%B8%EB%9E%98%ED%94%84_%EA%B7%B8%EB%A6%AC%EA%B8%B0
   // Plot values

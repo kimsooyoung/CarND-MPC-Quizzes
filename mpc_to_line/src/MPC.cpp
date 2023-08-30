@@ -121,38 +121,34 @@ class FG_eval {
       AD<double> delta0 = vars[delta_start + t - 1];
       AD<double> a0 = vars[a_start + t - 1];
 
+      AD<double> f0 = coeffs[0] + coeffs[1] * x0;
+      AD<double> psides0 = CppAD::atan(coeffs[1]);
+
+      fg[1 + x_start + t] = x1 - (x0 + v0 * CppAD::cos(psi0) * dt);
+      fg[1 + y_start + t] = y1 - (y0 + v0 * CppAD::sin(psi0) * dt);
+      fg[1 + psi_start + t] = psi1 - (psi0 + v0 * delta0 / Lf * dt);
+      fg[1 + v_start + t] = v1 - (v0 + a0 * dt);
+      fg[1 + cte_start + t] =
+          cte1 - ((f0 - y0) + (v0 * CppAD::sin(epsi0) * dt));
+      fg[1 + epsi_start + t] =
+          epsi1 - ((psi0 - psides0) + v0 * delta0 / Lf * dt);
+
       // Here's `x` to get you started.
       // The idea here is to constraint this value to be 0.
       //
       // NOTE: The use of `AD<double>` and use of `CppAD`!
       // CppAD can compute derivatives and pass these to the solver.
-
-      /**
-       * TODO: Setup the rest of the model constraints
-       */
       fg[1 + x_start + t] = x1 - (x0 + v0 * CppAD::cos(psi0) * dt);
       fg[1 + y_start + t] = y1 - (y0 + v0 * CppAD::sin(psi0) * dt);
       fg[1 + psi_start + t] = psi1 - (psi0 + v0 * delta0 / Lf * dt);
       fg[1 + v_start + t] = v1 - (v0 + a0 * dt);
-      
-      // 1st order tajectory
-      // f(x) = a0 + a1 * x
-      //
-      // 3rd order trajectory
-      // f(x) = a0 + a1 * x + a2 * x^2 + a3 * x^3
-      // f'(x) = a1 + 2 * a2 * x + 3 * a3 * x^2
-      AD<double> psi_des = CppAD::atan(coeffs[1] + coeffs[2] * x0 + coeffs[3] * x0 * x0);
-      fg[1 + epsi_start + t] = epsi1 - ((psi0 - psi_des) + v0 * delta0 / Lf * dt); 
-      
-      AD<double> f_x = coeffs[0] + coeffs[1] * x0 + coeffs[2] * x0 * x0 + coeffs[3] * x0 * x0 * x0;
-      fg[1 + cte_start + t] = cte1 - (f_x - y0 + v0 * CppAD::sin(epsi0) * dt);
     }
-    // fg[]
-    std::cout << "fg.size() " << fg.size() << std::endl;
-    for(auto i : fg){
-      std::cout << i << std::endl;
-    }
-    std::cout << "done" << std::endl;
+    // // fg[]
+    // std::cout << "fg.size() " << fg.size() << std::endl;
+    // // for(auto i : fg){
+    // //   std::cout << i << std::endl;
+    // // }
+    // std::cout << "done" << std::endl;
   }
 };
 
@@ -177,7 +173,8 @@ std::vector<double> MPC::Solve(const VectorXd &x0, const VectorXd &coeffs) {
   // N timesteps == N - 1 actuations
   size_t n_vars = N * 6 + (N - 1) * 2;
   // Number of constraints
-  size_t n_constraints = N * 6;
+  // 6 initial cond + dynamics conds.
+  size_t n_constraints = 6 * (N - 1) + 6;
 
   // Initial value of the independent variables.
   // Should be 0 except for the initial values.
