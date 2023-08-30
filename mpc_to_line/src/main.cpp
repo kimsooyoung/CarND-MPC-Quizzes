@@ -75,19 +75,19 @@ int main() {
     cout << endl;
   }
 
-
   // TODO: matplotlibcpp  https://statphys.pknu.ac.kr/dokuwiki/doku.php?id=c:c_%EC%97%90_matplotlib_%EB%9D%BC%EC%9D%B4%EB%B8%8C%EB%9F%AC%EB%A6%AC_%EC%B6%94%EA%B0%80%ED%95%B4%EC%84%9C_%EA%B7%B8%EB%9E%98%ED%94%84_%EA%B7%B8%EB%A6%AC%EA%B8%B0
   // Plot values
   // NOTE: feel free to play around with this.
   // It's useful for debugging!
   plt::figure(1);
   plt::subplot(3, 1, 1);
-  // plt::title("XY Values");
+  plt::title("X Values");
   plt::plot(x_vals);
   plt::subplot(3, 1, 2);
+  plt::title("Y Values");
   plt::plot(y_vals);
-  // plt::title("PSI Values");
   plt::subplot(3, 1, 3);
+  plt::title("PSI Values");
   plt::plot(psi_vals);
 
   plt::figure(2);
