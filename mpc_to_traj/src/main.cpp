@@ -3,14 +3,16 @@
 #include <vector>
 #include "circular_traj.h"
 #include "helpers.h"
-// #include "MPC.h"
+#include "MPC.h"
 
 namespace plt = matplotlibcpp;
 
 using Eigen::VectorXd;
 using std::cout;
 using std::endl;
+using std::map;
 using std::vector;
+using std::string;
 
 // For every steps
 // 1. get traj
@@ -21,7 +23,6 @@ using std::vector;
 // 6. plot results
 
 int main() {
-  // MPC mpc;
 
   const int window_size = 6;
   const int iters = 50;
@@ -54,8 +55,18 @@ int main() {
   // linear approx for epsi
   double epsi = atan(coeffs[1]);
 
+  // prepare parameters
+  map<string, double> mpc_params;
+  mpc_params["DT"] = 0.1;
+  mpc_params["STEPS"] = 40.0;
+  mpc_params["REF_V"] = 1.0;
+
   VectorXd state(6);
   state << x, y, psi, v, w, cte, epsi;
+
+  // create mpc instance
+  MPC mpc;
+  mpc.LoadParams(mpc_params);
 
   for (size_t i = 0; i < iters; ++i) {
     cout << "Iteration " << i << endl;

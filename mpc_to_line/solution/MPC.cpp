@@ -254,8 +254,9 @@ std::vector<double> MPC::Solve(const VectorXd &x0, const VectorXd &coeffs) {
 
   auto cost = solution.obj_value;
   std::cout << "Cost " << cost << std::endl;
-  return {solution.x[x_start + 1],   solution.x[y_start + 1],
-          solution.x[psi_start + 1], solution.x[v_start + 1],
-          solution.x[cte_start + 1], solution.x[epsi_start + 1],
-          solution.x[delta_start],   solution.x[a_start]};
+  return {solution.x[x_start_ + 1],    solution.x[y_start_ + 1],
+          solution.x[psi_start_ + 1],  solution.x[v_start_ + 1],
+          solution.x[w_start_ + 1],    solution.x[cte_start_ + 1],
+          solution.x[epsi_start_ + 1], solution.x[a_start_ + 1],
+          solution.x[alpha_start_]};
 }
