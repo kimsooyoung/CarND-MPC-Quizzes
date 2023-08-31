@@ -1,4 +1,6 @@
-[] mpc 기존 코드 돌아가게 하기
+[x] mpc 기존 코드 돌아가게 하기
 [] mpc trajectory 개발
+    [x] 원 traj 구현
+    [ ] 
 [] animation plotting
 [] ros2에 입히기
