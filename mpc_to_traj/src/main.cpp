@@ -61,7 +61,7 @@ int main() {
   mpc_params["STEPS"] = 40.0;
   mpc_params["REF_V"] = 1.0;
 
-  VectorXd state(6);
+  VectorXd state(7);
   state << x, y, psi, v, w, cte, epsi;
 
   // create mpc instance
@@ -71,19 +71,18 @@ int main() {
   for (size_t i = 0; i < iters; ++i) {
     cout << "Iteration " << i << endl;
 
-    // auto vars = mpc.Solve(state, coeffs);
-    auto vars = vector<double>(9, 0.0);
+    auto vars = mpc.Solve(state, coeffs);
 
-    cout << "x = " << vars[0] << endl;
-    cout << "y = " << vars[1] << endl;
-    cout << "psi = " << vars[2] << endl;
-    cout << "v = " << vars[3] << endl;
-    cout << "w = " << vars[4] << endl;
-    cout << "cte = " << vars[5] << endl;
-    cout << "epsi = " << vars[6] << endl;
-    cout << "delta = " << vars[7] << endl;
-    cout << "a = " << vars[8] << endl;
-    cout << endl;
+    // cout << "x = " << vars[0] << endl;
+    // cout << "y = " << vars[1] << endl;
+    // cout << "psi = " << vars[2] << endl;
+    // cout << "v = " << vars[3] << endl;
+    // cout << "w = " << vars[4] << endl;
+    // cout << "cte = " << vars[5] << endl;
+    // cout << "epsi = " << vars[6] << endl;
+    // cout << "delta = " << vars[7] << endl;
+    // cout << "a = " << vars[8] << endl;
+    // cout << endl;
 
     auto cur_x = vars[0];
     auto cur_y = vars[1];
