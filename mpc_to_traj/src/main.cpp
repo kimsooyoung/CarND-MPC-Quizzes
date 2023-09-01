@@ -24,12 +24,14 @@ using std::string;
 
 int main() {
 
-  const double pi = M_PI;
+  // const double pi = M_PI;
 
-  const int traj_sampling_num = 100;
-  const int window_size = 10;
-  const int iters = 100;
-  const double dt = 0.1;
+  const int window_size = 25;
+  const int iters = 200;
+  const double dt = 0.05;
+  const double ref_v = 10.0;
+
+  int traj_sampling_num = int(iters * dt * 10);
 
   // initial trajectory
 
@@ -61,16 +63,20 @@ int main() {
   double v = 0.0;
   double w = 0.0;
   // We'll use robot frame, therefore cte = 0 is our goal.
-  double cte = polyeval(coeffs, x);
+  double cte = polyeval(coeffs, x) - y;
   // linear approx for epsi
-  double epsi = atan(coeffs[1]);
+  double epsi = psi - atan(coeffs[1]);
 
   // prepare parameters
   map<string, double> mpc_params;
   mpc_params["STEPS"] = window_size;
   // mpc_params["REF_V"] = (2 * pi) / (dt * iters);
-  mpc_params["REF_V"] = 1.0;
+  mpc_params["REF_V"] = ref_v;
   mpc_params["DT"] = dt;
+  mpc_params["MIN_ACC"] = -5.0;
+  mpc_params["MAX_ACC"] = 5.0;
+  mpc_params["MIN_ANG_ACC"] = -3.0;
+  mpc_params["MAX_ANG_ACC"] = 3.0;
 
   VectorXd state(7);
   state << x, y, psi, v, w, cte, epsi;
@@ -90,21 +96,20 @@ int main() {
   vector<double> a_vals;
   vector<double> alpha_vals;
 
-  for (size_t i = 0; i < 1; ++i) {
-    // cout << "Iteration " << i << endl;
+  for (size_t i = 0; i < iters; ++i) {
 
     auto vars = mpc.Solve(state, coeffs);
 
-    // cout << "x = " << vars[0] << endl;
-    // cout << "y = " << vars[1] << endl;
-    // cout << "psi = " << vars[2] << endl;
-    // cout << "v = " << vars[3] << endl;
-    // cout << "w = " << vars[4] << endl;
-    // cout << "cte = " << vars[5] << endl;
-    // cout << "epsi = " << vars[6] << endl;
-    // cout << "a = " << vars[7] << endl;
-    // cout << "alpha = " << vars[8] << endl;
-    // cout << endl;
+    cout << "x = " << vars[0] << endl;
+    cout << "y = " << vars[1] << endl;
+    cout << "psi = " << vars[2] << endl;
+    cout << "v = " << vars[3] << endl;
+    cout << "w = " << vars[4] << endl;
+    cout << "cte = " << vars[5] << endl;
+    cout << "epsi = " << vars[6] << endl;
+    cout << "a = " << vars[7] << endl;
+    cout << "alpha = " << vars[8] << endl;
+    cout << endl;
 
     auto cur_x = vars[0];
     auto cur_y = vars[1];
@@ -116,13 +121,9 @@ int main() {
     auto cur_a = vars[7];
     auto cur_alpha = vars[8];
 
-    // x_vals.push_back(cur_x + cur_v * cos(cur_psi) * dt);
-    // y_vals.push_back(cur_y + cur_v * sin(cur_psi) * dt);
-    // psi_vals.push_back(cur_psi + cur_w * dt);
-
     x_vals.push_back(cur_x);
     y_vals.push_back(cur_y);
-    psi_vals.push_back(cur_psi + cur_w * dt);
+    psi_vals.push_back(cur_psi);
     v_vals.push_back(cur_v);
     w_vals.push_back(cur_w);
     cte_vals.push_back(cur_cte);
@@ -130,49 +131,17 @@ int main() {
     a_vals.push_back(cur_a);
     alpha_vals.push_back(cur_alpha);
 
-    // update trajectory
-    // auto traj_points = GetTrajPointsCirc(i, window_size, traj_sampling_num);
-    auto traj_points = GetTrajPointsLine(i, window_size, traj_sampling_num);
-    auto traj_x = std::get<0>(traj_points);
-    auto traj_y = std::get<1>(traj_points);
-
-    for(long unsigned int i = 0; i < window_size; ++i)
-    {
-      x_veh[i] = traj_x[i];
-      y_veh[i] = traj_y[i];
-    }
-
-    // update coeffs
-    coeffs = polyfit(x_veh, y_veh, 1);
-
-    const double cte  = polyeval(coeffs, 0.0);
-    const double epsi = atan(coeffs[1]);
-
     // update state
-    // state << vars[0], vars[1], vars[2], vars[3], vars[4], cte, epsi;
-    auto new_x = cur_x + cur_v * cos(cur_psi) * dt;
-    auto new_y = cur_y + cur_v * sin(cur_psi) * dt;
-    auto new_psi = cur_psi + cur_w * dt;
-    auto new_v = cur_v + cur_a * dt;
-    auto new_w = cur_w + cur_alpha * dt;
-    
-    state << new_x, new_y, new_psi, new_v, new_w, cte, epsi;
+    state << vars[0], vars[1], vars[2], vars[3], vars[4], vars[5], vars[6];
   }
-
-  // vector<double> gt_x(traj_sampling_num + 1);
-  // vector<double> gt_y(traj_sampling_num + 1);
-
-  // for(int i = 0; i < traj_sampling_num + 1; ++i)
-  // {
-  //     gt_x[i] = cos(2 * pi * i / traj_sampling_num);
-  //     gt_y[i] = sin(2 * pi * i / traj_sampling_num) + 1;
-  // }
 
   auto gt_traj = GetTrajPointsLine(0, traj_sampling_num, traj_sampling_num);
   auto gt_x = std::get<0>(gt_traj);
   auto gt_y = std::get<1>(gt_traj);
 
-  if (false){
+  std::cout << coeffs << std::endl;
+
+  if (true){
     plt::figure(1);
     plt::subplot(3, 1, 1);
     plt::title("X Values");

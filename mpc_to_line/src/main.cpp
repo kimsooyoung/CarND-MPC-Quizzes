@@ -13,7 +13,7 @@ using std::vector;
 
 int main() {
   MPC mpc;
-  int iters = 50;
+  int iters = 100;
 
   VectorXd ptsx(2);
   VectorXd ptsy(2);
@@ -54,7 +54,7 @@ int main() {
     auto vars = mpc.Solve(state, coeffs);
 
     x_vals.push_back(vars[0]);
-    y_vals.push_back(vars[1]);
+    y_vals.push_back(vars[1]);  
     psi_vals.push_back(vars[2]);
     v_vals.push_back(vars[3]);
     cte_vals.push_back(vars[4]);
@@ -75,20 +75,25 @@ int main() {
     cout << endl;
   }
 
+  cout << coeffs << endl;
+
   // TODO: matplotlibcpp  https://statphys.pknu.ac.kr/dokuwiki/doku.php?id=c:c_%EC%97%90_matplotlib_%EB%9D%BC%EC%9D%B4%EB%B8%8C%EB%9F%AC%EB%A6%AC_%EC%B6%94%EA%B0%80%ED%95%B4%EC%84%9C_%EA%B7%B8%EB%9E%98%ED%94%84_%EA%B7%B8%EB%A6%AC%EA%B8%B0
   // Plot values
   // NOTE: feel free to play around with this.
   // It's useful for debugging!
   plt::figure(1);
-  plt::subplot(3, 1, 1);
+  plt::subplot(4, 1, 1);
   plt::title("X Values");
   plt::plot(x_vals);
-  plt::subplot(3, 1, 2);
+  plt::subplot(4, 1, 2);
   plt::title("Y Values");
   plt::plot(y_vals);
-  plt::subplot(3, 1, 3);
+  plt::subplot(4, 1, 3);
   plt::title("PSI Values");
   plt::plot(psi_vals);
+  plt::subplot(4, 1, 4);
+  plt::title("V Values");
+  plt::plot(v_vals);
 
   plt::figure(2);
   plt::subplot(3, 1, 1);
@@ -100,6 +105,20 @@ int main() {
   plt::subplot(3, 1, 3);
   plt::title("Accel m/s^2");
   plt::plot(a_vals);
+
+  vector<double> gt_x(100);
+  vector<double> gt_y(100);
+
+  for(int i = 0; i < 101; ++i)
+  {
+    gt_x[i] = i;
+    gt_y[i] = -1;
+  }
+
+  plt::figure(3);
+  plt::plot(gt_x, gt_y, "r--"); //plot the x,y
+  plt::plot(x_vals, y_vals); //plot the x,y
+  plt::grid(true); //show grid
 
   plt::show();
 }

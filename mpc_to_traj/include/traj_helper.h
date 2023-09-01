@@ -33,8 +33,6 @@ tuple<vector<double>, vector<double>> GetTrajPointsLine(
     const int &point_num,
     const int &sampling_num
 ){
-
-    const double pi = M_PI;
     vector<double> x(point_num);
     vector<double> y(point_num);
 

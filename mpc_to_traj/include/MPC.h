@@ -15,6 +15,9 @@ private:
   int v_start_, w_start_; 
   int cte_start_, epsi_start_;
   int a_start_, alpha_start_;
+
+  double min_acc_, max_acc_;
+  double min_ang_acc_, max_ang_acc_;
   
   std::map<std::string, double> params_;
 
