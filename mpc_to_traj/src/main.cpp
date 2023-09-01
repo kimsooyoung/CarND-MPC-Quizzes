@@ -1,7 +1,7 @@
 #include <matplotlibcpp.h>
 #include <Eigen/QR>
 #include <vector>
-#include "circular_traj.h"
+#include "traj_helper.h"
 #include "helpers.h"
 #include "MPC.h"
 
@@ -27,12 +27,17 @@ int main() {
   const double pi = M_PI;
 
   const int traj_sampling_num = 100;
-  const int window_size = 30;
+  const int window_size = 10;
   const int iters = 100;
   const double dt = 0.1;
 
   // initial trajectory
-  auto traj_points = GetTrajPointsCirc(0, window_size, traj_sampling_num);
+
+  // Case 1. line trajectory
+  auto traj_points = GetTrajPointsLine(0, window_size, traj_sampling_num);
+  // Case 2. circular trajectory
+  // auto traj_points = GetTrajPointsCirc(0, window_size, traj_sampling_num);
+  
   auto traj_x = std::get<0>(traj_points);
   auto traj_y = std::get<1>(traj_points);
 
@@ -51,6 +56,7 @@ int main() {
   // initial state
   double x = 0.0;
   double y = 0.0;
+  // double y = 2.0;
   double psi = 0.0;
   double v = 0.0;
   double w = 0.0;
@@ -62,7 +68,8 @@ int main() {
   // prepare parameters
   map<string, double> mpc_params;
   mpc_params["STEPS"] = window_size;
-  mpc_params["REF_V"] = (2 * pi) / (dt * iters);
+  // mpc_params["REF_V"] = (2 * pi) / (dt * iters);
+  mpc_params["REF_V"] = 1.0;
   mpc_params["DT"] = dt;
 
   VectorXd state(7);
@@ -83,21 +90,21 @@ int main() {
   vector<double> a_vals;
   vector<double> alpha_vals;
 
-  for (size_t i = 0; i < iters; ++i) {
+  for (size_t i = 0; i < 1; ++i) {
     // cout << "Iteration " << i << endl;
 
     auto vars = mpc.Solve(state, coeffs);
 
-    cout << "x = " << vars[0] << endl;
-    cout << "y = " << vars[1] << endl;
-    cout << "psi = " << vars[2] << endl;
-    cout << "v = " << vars[3] << endl;
-    cout << "w = " << vars[4] << endl;
-    cout << "cte = " << vars[5] << endl;
-    cout << "epsi = " << vars[6] << endl;
-    cout << "a = " << vars[7] << endl;
-    cout << "alpha = " << vars[8] << endl;
-    cout << endl;
+    // cout << "x = " << vars[0] << endl;
+    // cout << "y = " << vars[1] << endl;
+    // cout << "psi = " << vars[2] << endl;
+    // cout << "v = " << vars[3] << endl;
+    // cout << "w = " << vars[4] << endl;
+    // cout << "cte = " << vars[5] << endl;
+    // cout << "epsi = " << vars[6] << endl;
+    // cout << "a = " << vars[7] << endl;
+    // cout << "alpha = " << vars[8] << endl;
+    // cout << endl;
 
     auto cur_x = vars[0];
     auto cur_y = vars[1];
@@ -124,7 +131,8 @@ int main() {
     alpha_vals.push_back(cur_alpha);
 
     // update trajectory
-    auto traj_points = GetTrajPointsCirc(i, window_size, traj_sampling_num);
+    // auto traj_points = GetTrajPointsCirc(i, window_size, traj_sampling_num);
+    auto traj_points = GetTrajPointsLine(i, window_size, traj_sampling_num);
     auto traj_x = std::get<0>(traj_points);
     auto traj_y = std::get<1>(traj_points);
 
@@ -135,84 +143,88 @@ int main() {
     }
 
     // update coeffs
-    coeffs = polyfit(x_veh, y_veh, 3); 
+    coeffs = polyfit(x_veh, y_veh, 1);
 
     const double cte  = polyeval(coeffs, 0.0);
     const double epsi = atan(coeffs[1]);
 
     // update state
-    state << vars[0], vars[1], vars[2], vars[3], vars[4], cte, epsi;
+    // state << vars[0], vars[1], vars[2], vars[3], vars[4], cte, epsi;
+    auto new_x = cur_x + cur_v * cos(cur_psi) * dt;
+    auto new_y = cur_y + cur_v * sin(cur_psi) * dt;
+    auto new_psi = cur_psi + cur_w * dt;
+    auto new_v = cur_v + cur_a * dt;
+    auto new_w = cur_w + cur_alpha * dt;
+    
+    state << new_x, new_y, new_psi, new_v, new_w, cte, epsi;
   }
 
-  vector<double> gt_x(traj_sampling_num + 1);
-  vector<double> gt_y(traj_sampling_num + 1);
+  // vector<double> gt_x(traj_sampling_num + 1);
+  // vector<double> gt_y(traj_sampling_num + 1);
 
-  for(int i = 0; i < traj_sampling_num + 1; ++i)
-  {
-      gt_x[i] = cos(2 * pi * i / traj_sampling_num);
-      gt_y[i] = sin(2 * pi * i / traj_sampling_num) + 1;
+  // for(int i = 0; i < traj_sampling_num + 1; ++i)
+  // {
+  //     gt_x[i] = cos(2 * pi * i / traj_sampling_num);
+  //     gt_y[i] = sin(2 * pi * i / traj_sampling_num) + 1;
+  // }
+
+  auto gt_traj = GetTrajPointsLine(0, traj_sampling_num, traj_sampling_num);
+  auto gt_x = std::get<0>(gt_traj);
+  auto gt_y = std::get<1>(gt_traj);
+
+  if (false){
+    plt::figure(1);
+    plt::subplot(3, 1, 1);
+    plt::title("X Values");
+    plt::plot(x_vals);
+    plt::subplot(3, 1, 2);
+    plt::title("Y Values");
+    plt::plot(y_vals);
+    plt::subplot(3, 1, 3);
+    plt::title("PSI Values");
+    plt::plot(psi_vals);
+
+    plt::figure(2);
+    plt::subplot(2, 1, 1);
+    plt::title("V");
+    plt::plot(v_vals);
+    plt::subplot(2, 1, 2);
+    plt::title("W");
+    plt::plot(w_vals);
+
+    plt::figure(3);
+    plt::subplot(2, 1, 1);
+    plt::title("CTE");
+    plt::plot(cte_vals);
+    plt::subplot(2, 1, 2);
+    plt::title("EPSI");
+    plt::plot(epsi_vals);
+
+    plt::figure(4);
+    plt::subplot(2, 1, 1);
+    plt::title("Acc");
+    plt::plot(a_vals);
+    plt::subplot(2, 1, 2);
+    plt::title("Anaugular Acc");
+    plt::plot(alpha_vals);
+
+    plt::figure(5);
+    plt::plot(gt_x, gt_y, "r--"); //plot the x,y
+    plt::plot(x_vals, y_vals); //plot the x,y
+    plt::grid(true); //show grid
+
+    // plt::subplot(3, 1, 1);
+    // plt::title("CTE");
+    // plt::plot(cte_vals);
+    // plt::subplot(3, 1, 2);
+    // plt::title("Delta (Radians)");
+    // plt::plot(delta_vals);
+    // plt::subplot(3, 1, 3);
+    // plt::title("Accel m/s^2");
+    // plt::plot(a_vals);
+
+    plt::show();
   }
-
-  // plt::plot(gt_x, gt_y, "r--"); //plot the x,y
-  // plt::plot(x_vals, y_vals); //plot the x,y
-  // plt::grid(true); //show grid
-  // plt::show(); // show figure
-
-  // TODO: matplotlibcpp  https://statphys.pknu.ac.kr/dokuwiki/doku.php?id=c:c_%EC%97%90_matplotlib_%EB%9D%BC%EC%9D%B4%EB%B8%8C%EB%9F%AC%EB%A6%AC_%EC%B6%94%EA%B0%80%ED%95%B4%EC%84%9C_%EA%B7%B8%EB%9E%98%ED%94%84_%EA%B7%B8%EB%A6%AC%EA%B8%B0
-  // Plot values
-  // NOTE: feel free to play around with this.
-  // It's useful for debugging!
-  plt::figure(1);
-  plt::subplot(3, 1, 1);
-  plt::title("X Values");
-  plt::plot(x_vals);
-  plt::subplot(3, 1, 2);
-  plt::title("Y Values");
-  plt::plot(y_vals);
-  plt::subplot(3, 1, 3);
-  plt::title("PSI Values");
-  plt::plot(psi_vals);
-
-  plt::figure(2);
-  plt::subplot(2, 1, 1);
-  plt::title("V");
-  plt::plot(v_vals);
-  plt::subplot(2, 1, 2);
-  plt::title("W");
-  plt::plot(w_vals);
-
-  plt::figure(3);
-  plt::subplot(2, 1, 1);
-  plt::title("CTE");
-  plt::plot(cte_vals);
-  plt::subplot(2, 1, 2);
-  plt::title("EPSI");
-  plt::plot(epsi_vals);
-
-  plt::figure(4);
-  plt::subplot(2, 1, 1);
-  plt::title("Acc");
-  plt::plot(a_vals);
-  plt::subplot(2, 1, 2);
-  plt::title("Anaugular Acc");
-  plt::plot(alpha_vals);
-
-  plt::figure(5);
-  plt::plot(gt_x, gt_y, "r--"); //plot the x,y
-  plt::plot(x_vals, y_vals); //plot the x,y
-  plt::grid(true); //show grid
-
-  // plt::subplot(3, 1, 1);
-  // plt::title("CTE");
-  // plt::plot(cte_vals);
-  // plt::subplot(3, 1, 2);
-  // plt::title("Delta (Radians)");
-  // plt::plot(delta_vals);
-  // plt::subplot(3, 1, 3);
-  // plt::title("Accel m/s^2");
-  // plt::plot(a_vals);
-
-  plt::show();
 
   return 0;
 }

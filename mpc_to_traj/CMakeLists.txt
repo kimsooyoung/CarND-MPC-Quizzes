@@ -24,6 +24,10 @@ add_executable(circular_traj src/circular_traj.cpp)
 target_include_directories(circular_traj PRIVATE ${Python3_INCLUDE_DIRS})
 target_link_libraries(circular_traj PRIVATE Python3::Python)
 
+add_executable(line_traj src/line_traj.cpp)
+target_include_directories(line_traj PRIVATE ${Python3_INCLUDE_DIRS})
+target_link_libraries(line_traj PRIVATE Python3::Python)
+
 add_executable(mpc_traj src/main.cpp src/MPC.cpp)
 target_include_directories(mpc_traj PRIVATE ${Python3_INCLUDE_DIRS})
 target_link_libraries(mpc_traj PRIVATE Python3::Python ipopt)

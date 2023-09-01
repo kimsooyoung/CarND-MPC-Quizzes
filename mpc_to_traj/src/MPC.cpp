@@ -48,6 +48,10 @@ public:
     mpc_step_ = params.find("STEPS") != params.end() ? params.at("STEPS") : mpc_step_;
     ref_v_   = params.find("REF_V") != params.end() ? params.at("REF_V") : ref_v_;
     dt = params.find("DT") != params.end() ? params.at("DT") : dt;
+
+    std::cout << "[FG_eval] mpc_step : " << mpc_step_ << std::endl;
+    std::cout << "[FG_eval] ref_v : " << ref_v_ << std::endl;
+    std::cout << "[FG_eval] dt : " << dt << std::endl;
   }
 
   typedef CPPAD_TESTVECTOR(AD<double>) ADvector;
@@ -59,8 +63,8 @@ public:
     fg[0] = 0;
 
     for (auto t = 0; t < mpc_step_; ++t) {
-      fg[0] += 100 * CppAD::pow(vars[cte_start_ + t], 2);
-      fg[0] += 100 * CppAD::pow(vars[epsi_start_ + t], 2);
+      fg[0] += 0 * CppAD::pow(vars[cte_start_ + t], 2);
+      fg[0] += 0 * CppAD::pow(vars[epsi_start_ + t], 2);
       fg[0] += 100 * CppAD::pow(vars[v_start_ + t] - ref_v_, 2);
     }
 
@@ -137,7 +141,7 @@ public:
       //     epsi1 - ((psi0 - psides0) + v0 * delta0 / Lf * dt);
 
       fg[1 + cte_start_ + t] = cte1 - (f0 - y0);
-      fg[1 + epsi_start_ + t] = epsi1 - (psi0 - psides0);
+      // fg[1 + epsi_start_ + t] = epsi1 - (psi0 - psides0);
     }
   }
 };
@@ -292,6 +296,16 @@ std::vector<double> MPC::Solve(const VectorXd &x0, const VectorXd &coeffs) {
   auto cost = solution.obj_value;
   // std::cout << "Cost " << cost << std::endl;
   // std::cout << solution.x.size() << std::endl;
+  
+  std::cout << "x = ";
+  for(auto i = x_start_; i < y_start_; ++i)
+    std::cout << " / " << solution.x[i];
+  std::cout << std::endl;
+
+  std::cout << "y = ";
+  for(auto i = y_start_; i < psi_start_; ++i)
+    std::cout << " / " << solution.x[i];
+  std::cout << std::endl;
 
   return {solution.x[x_start_ + 1],   solution.x[y_start_ + 1],
           solution.x[psi_start_ + 1], solution.x[v_start_ + 1],

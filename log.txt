@@ -6,6 +6,8 @@
     [ ] a, alpha가 안바뀐다?!
 
 => 직선 궤적부터 해보자.
+[ ] iteration=1로 둔 다음 state 변화를 살펴보자.
+
 
 [] animation plotting
 [] ros2에 입히기

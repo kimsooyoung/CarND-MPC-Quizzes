@@ -27,3 +27,22 @@ tuple<vector<double>, vector<double>> GetTrajPointsCirc(
 
     return std::make_tuple(x, y);
 }
+
+tuple<vector<double>, vector<double>> GetTrajPointsLine(
+    const int &start,
+    const int &point_num,
+    const int &sampling_num
+){
+
+    const double pi = M_PI;
+    vector<double> x(point_num);
+    vector<double> y(point_num);
+
+    for(int i = 0; i < point_num; ++i)
+    {
+        x[i] = i + start;
+        y[i] = 2;
+    }
+
+    return std::make_tuple(x, y);
+}
