@@ -1,6 +1,68 @@
 [x] mpc 기존 코드 돌아가게 하기
 [] mpc trajectory 개발
     [x] 원 traj 구현
-    [ ] 
+    [x] parameter 변경 되는지 확인
+    [ ] 원 잘 따라가는지 확인 => weight 수정
+    [ ] a, alpha가 안바뀐다?!
+
+=> 직선 궤적부터 해보자.
+
 [] animation plotting
 [] ros2에 입히기
+
+
+
+// // Convert to the vehicle coordinate system
+// const double cospsi = cos(cur_psi);
+// const double sinpsi = sin(cur_psi);
+
+// for(int i = 0; i < window_size; i++) 
+// {
+//     const double dx = traj_x[i] - cur_x;
+//     const double dy = traj_x[i] - cur_y;
+//     x_veh[i] = dx * cospsi + dy * sinpsi;
+//     y_veh[i] = dy * cospsi - dx * sinpsi;
+// }
+
+    //Parameter for MPC solver
+    pn.param("mpc_steps", _mpc_steps, 20.0);
+    pn.param("mpc_ref_cte", _ref_cte, 0.0);
+    pn.param("mpc_ref_epsi", _ref_epsi, 0.0);
+    pn.param("mpc_ref_vel", _ref_vel, 1.5);
+    pn.param("mpc_w_cte", _w_cte, 100.0);
+    pn.param("mpc_w_epsi", _w_epsi, 100.0);
+    pn.param("mpc_w_vel", _w_vel, 100.0);
+    pn.param("mpc_w_delta", _w_delta, 100.0);
+    pn.param("mpc_w_accel", _w_accel, 50.0);
+    pn.param("mpc_w_delta_d", _w_delta_d, 0.0);
+    pn.param("mpc_w_accel_d", _w_accel_d, 0.0);
+    pn.param("mpc_max_steering", _max_steering, 0.523); // Maximal steering radian (~30 deg)
+    pn.param("mpc_max_throttle", _max_throttle, 1.0); // Maximal throttle accel
+    pn.param("mpc_bound_value", _bound_value, 1.0e3); // Bound value for other variables
+
+
+_w_cte : 100
+_w_epsi : 100
+_w_vel : 100
+
+_w_delta : 100
+_w_accel : 50
+
+_w_delta_d : 0
+_w_accel_d ; 0
+
+    auto cur_x = vars[0];
+    auto cur_y = vars[1];
+    auto cur_psi = vars[2];
+    auto cur_v = vars[3];
+    auto cur_w = vars[4];
+    auto cur_cte = vars[5];
+    auto cur_epsi = vars[6];
+    auto cur_a = vars[7];
+    auto cur_alpha = vars[8];
+
+
+fg[1 + cte_start_ + t] = cte1 - (f0 - y0);
+fg[1 + epsi_start_ + t] = epsi1 - (psi0 - psides0);
+=> 여기가 잘못된 것 같음!
+

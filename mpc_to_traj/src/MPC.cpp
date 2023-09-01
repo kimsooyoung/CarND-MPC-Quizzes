@@ -45,9 +45,9 @@ public:
   }
 
   void LoadParams(const std::map<std::string, double> &params){
-    dt = params.find("DT") != params.end() ? params.at("DT") : dt;
     mpc_step_ = params.find("STEPS") != params.end() ? params.at("STEPS") : mpc_step_;
     ref_v_   = params.find("REF_V") != params.end() ? params.at("REF_V") : ref_v_;
+    dt = params.find("DT") != params.end() ? params.at("DT") : dt;
   }
 
   typedef CPPAD_TESTVECTOR(AD<double>) ADvector;
@@ -58,32 +58,25 @@ public:
     // Any additions to the cost should be added to `fg[0]`.
     fg[0] = 0;
 
-    // Reference State Cost
-    /*
-     * TODO: Define the cost related the reference state and
-     *   anything you think may be beneficial.
-     */
-
     for (auto t = 0; t < mpc_step_; ++t) {
-      fg[0] += 10 * CppAD::pow(vars[cte_start_ + t], 2);
-      fg[0] += 10 * CppAD::pow(vars[epsi_start_ + t], 2);
-      fg[0] += CppAD::pow(vars[v_start_ + t] - ref_v_, 2);
+      fg[0] += 100 * CppAD::pow(vars[cte_start_ + t], 2);
+      fg[0] += 100 * CppAD::pow(vars[epsi_start_ + t], 2);
+      fg[0] += 100 * CppAD::pow(vars[v_start_ + t] - ref_v_, 2);
     }
 
     for (auto i = 0; i < mpc_step_ - 1; i++){
-      fg[0] += CppAD::pow(vars[a_start_ + i], 2);
-      fg[0] += CppAD::pow(vars[alpha_start_ + i], 2);
+      fg[0] += 0 * CppAD::pow(vars[a_start_ + i], 2);
+      fg[0] += 0 * CppAD::pow(vars[alpha_start_ + i], 2);
     }
 
     for (auto i = 0; i < mpc_step_ - 2; i++){
-      fg[0] += CppAD::pow(vars[a_start_ + i + 1] - vars[a_start_ + i], 2);
-      fg[0] += CppAD::pow(vars[alpha_start_ + i + 1] - vars[alpha_start_ + i], 2);
+      fg[0] += 0 * CppAD::pow(vars[a_start_ + i + 1] - vars[a_start_ + i], 2);
+      fg[0] += 0 * CppAD::pow(vars[alpha_start_ + i + 1] - vars[alpha_start_ + i], 2);
     }
 
     //
     // Setup Constraints
     //
-    // NOTE: In this section you'll setup the model constraints.
 
     // Initial constraints
     //
@@ -130,7 +123,8 @@ public:
       AD<double> psides0 = 0.0;
       for (int i = 1; i < coeffs.size(); i++) 
           psides0 += i * coeffs[i] * CppAD::pow(x0, i-1); // f'(x0)
-      psides0 = CppAD::atan(psides0);
+      // psides0 = CppAD::atan(psides0);
+      psides0 = CppAD::atan(coeffs[1]);
 
       fg[1 + x_start_ + t] = x1 - (x0 + v0 * CppAD::cos(psi0) * dt);
       fg[1 + y_start_ + t] = y1 - (y0 + v0 * CppAD::sin(psi0) * dt);
@@ -169,6 +163,8 @@ void MPC::LoadParams(const std::map<std::string, double> &params){
   epsi_start_  = cte_start_ + mpc_step_;
   a_start_     = epsi_start_ + mpc_step_;
   alpha_start_ = a_start_ + mpc_step_ - 1;
+
+  std::cout << "[MPC] mpc_step : " << mpc_step_ << std::endl;
 }
 
 
@@ -269,8 +265,6 @@ std::vector<double> MPC::Solve(const VectorXd &x0, const VectorXd &coeffs) {
   constraints_upperbound[cte_start_] = cte;
   constraints_upperbound[epsi_start_] = epsi;
 
-  std::cout << "constraints_upperbound.size() : " << constraints_upperbound.size() << std::endl;
-
   // Object that computes objective and constraints
   FG_eval fg_eval(coeffs);
   fg_eval.LoadParams(params_);
@@ -296,8 +290,8 @@ std::vector<double> MPC::Solve(const VectorXd &x0, const VectorXd &coeffs) {
   ok &= solution.status == CppAD::ipopt::solve_result<Dvector>::success;
   
   auto cost = solution.obj_value;
-  std::cout << "Cost " << cost << std::endl;
-  std::cout << solution.x.size() << std::endl;
+  // std::cout << "Cost " << cost << std::endl;
+  // std::cout << solution.x.size() << std::endl;
 
   return {solution.x[x_start_ + 1],   solution.x[y_start_ + 1],
           solution.x[psi_start_ + 1], solution.x[v_start_ + 1],

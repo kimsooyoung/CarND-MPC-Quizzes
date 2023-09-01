@@ -9,7 +9,7 @@ using std::tuple;
 using std::sin;
 using std::cos;
 
-tuple<vector<double>, vector<double>> GetTrajPoints(
+tuple<vector<double>, vector<double>> GetTrajPointsCirc(
     const int &start,
     const int &point_num,
     const int &sampling_num
