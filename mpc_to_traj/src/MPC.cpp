@@ -140,7 +140,11 @@ public:
       AD<double> psides0 = 0.0;
       for (int i = 1; i < coeffs_.size(); i++) 
           psides0 += i * coeffs_[i] * CppAD::pow(x0, i-1); // f'(x0)
-      psides0 = CppAD::atan(psides0);
+
+      if (abs(psides0) < 1e-3)
+        psides0 = M_PI / 2.0;
+      else
+        psides0 = CppAD::atan(psides0);
 
       fg[1 + x_start_ + t] = x1 - (x0 + v0 * CppAD::cos(psi0) * dt);
       fg[1 + y_start_ + t] = y1 - (y0 + v0 * CppAD::sin(psi0) * dt);
@@ -149,9 +153,6 @@ public:
       fg[1 + w_start_ + t] = w1 - (w0 + alpha0 * dt);
       fg[1 + cte_start_ + t] = cte1 - ((f0 - y0));
       fg[1 + epsi_start_ + t] = epsi1 - ((psi0 - psides0));
-      
-      // fg[1 + cte_start_ + t] = cte1 - ((f0 - y0) + (v0 * CppAD::sin(epsi0) * dt));
-      // fg[1 + epsi_start_ + t] = epsi1 - ((psi0 - psides0) + w0 * dt);
     }
   }
 };

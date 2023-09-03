@@ -67,7 +67,6 @@ int main() {
   // prepare parameters
   map<string, double> mpc_params;
   mpc_params["STEPS"] = window_size;
-  // mpc_params["REF_V"] = (2 * pi) / (dt * iters);
   mpc_params["REF_V"] = ref_v;
   mpc_params["DT"] = dt;
   mpc_params["MIN_ACC"] = -5.0;

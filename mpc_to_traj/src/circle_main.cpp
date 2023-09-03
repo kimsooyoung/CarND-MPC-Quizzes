@@ -26,34 +26,31 @@ int main() {
 
   const double pi = M_PI;
 
-  const int window_size = 20;
-  const int iters = 400; // 200
+  const int window_size = 5;
+  const int iters = 200; // 200
   const double dt = 0.1;
-  const double ref_v = 1.5;
 
   int traj_sampling_num = int(iters * dt);
 
   // initial trajectory
 
-  // Case 1. line trajectory
-  auto traj_points = GetTrajPointsLine(0, window_size, traj_sampling_num);
   // Case 2. circular trajectory
-  // auto traj_points = GetTrajPointsCirc(0, window_size, traj_sampling_num);
-  
+  auto traj_points = GetTrajPointsCirc(0, window_size, iters);
   auto traj_x = std::get<0>(traj_points);
   auto traj_y = std::get<1>(traj_points);
 
   VectorXd x_veh(window_size);
   VectorXd y_veh(window_size);
-
   for(long unsigned int i = 0; i < window_size; ++i)
   {
     x_veh[i] = traj_x[i];
     y_veh[i] = traj_y[i];
   }
 
-  // 3rd order polynomial
+  // 1rd order polynomial
   auto coeffs = polyfit(x_veh, y_veh, 1);
+  // 3rd order polynomial
+  // auto coeffs = polyfit(x_veh, y_veh, 3);
 
   // initial state
   double x = 0.0;
@@ -70,8 +67,8 @@ int main() {
   // prepare parameters
   map<string, double> mpc_params;
   mpc_params["STEPS"] = window_size;
-  // mpc_params["REF_V"] = (2 * pi) / (dt * iters);
-  mpc_params["REF_V"] = ref_v;
+  mpc_params["REF_V"] = 1 * (2 * pi) / (dt * iters);
+  // mpc_params["REF_V"] = 1;
   mpc_params["DT"] = dt;
   mpc_params["MIN_ACC"] = -5.0;
   mpc_params["MAX_ACC"] = 5.0;
@@ -79,10 +76,10 @@ int main() {
   mpc_params["MAX_ANG_ACC"] = 3.0;
 
   mpc_params["W_CTE"] = 100.0;
-  mpc_params["W_EPSI"] = 100.0;
+  mpc_params["W_EPSI"] = 500.0;
   mpc_params["W_V"] = 100.0;
-  mpc_params["W_A"] = 50.0;
-  mpc_params["W_ALPHA"] = 50.0;
+  mpc_params["W_A"] = 1.0;
+  mpc_params["W_ALPHA"] = 1.0;
   mpc_params["W_DELTA_A"] = 0.0;
   mpc_params["W_DELTA_ALPHA"] = 0.0;
 
@@ -107,20 +104,21 @@ int main() {
   // auto vars = mpc.Solve(state, coeffs);
   // return 0;
 
-  for (size_t i = 0; i < iters; ++i) {
+  // for (size_t i = 0; i < iters; ++i) {
+  for (size_t i = 0; i < 50; ++i) {
 
     auto vars = mpc.Solve(state, coeffs);
 
-    cout << "x = " << vars[0] << endl;
-    cout << "y = " << vars[1] << endl;
-    cout << "psi = " << vars[2] << endl;
-    cout << "v = " << vars[3] << endl;
-    cout << "w = " << vars[4] << endl;
-    cout << "cte = " << vars[5] << endl;
-    cout << "epsi = " << vars[6] << endl;
-    cout << "a = " << vars[7] << endl;
-    cout << "alpha = " << vars[8] << endl;
-    cout << endl;
+    // cout << "x = " << vars[0] << endl;
+    // cout << "y = " << vars[1] << endl;
+    // cout << "psi = " << vars[2] << endl;
+    // cout << "v = " << vars[3] << endl;
+    // cout << "w = " << vars[4] << endl;
+    // cout << "cte = " << vars[5] << endl;
+    // cout << "epsi = " << vars[6] << endl;
+    // cout << "a = " << vars[7] << endl;
+    // cout << "alpha = " << vars[8] << endl;
+    // cout << endl;
 
     auto cur_x = vars[0];
     auto cur_y = vars[1];
@@ -144,51 +142,70 @@ int main() {
 
     // update state
     state << vars[0], vars[1], vars[2], vars[3], vars[4], vars[5], vars[6];
+  
+    traj_points = GetTrajPointsCirc(i, window_size, iters);
+    traj_x = std::get<0>(traj_points);
+    traj_y = std::get<1>(traj_points);
+
+    // for (auto x : traj_x)
+    //     std::cout << "traj_x : " << x << std::endl;
+    // for (auto y : traj_y)
+    //     std::cout << "traj_y : " << y << std::endl;
+
+    // VectorXd x_veh(window_size);
+    // VectorXd y_veh(window_size);
+    for(long unsigned int i = 0; i < window_size; ++i)
+    {
+      x_veh[i] = traj_x[i];
+      y_veh[i] = traj_y[i];
+    }
+
+    // 1rd order polynomial
+    coeffs = polyfit(x_veh, y_veh, 1);
+    // std::cout << "i : " << i << " / coeffs : " << coeffs << std::endl;
   }
 
-  auto gt_traj = GetTrajPointsLine(0, traj_sampling_num, traj_sampling_num);
+  auto gt_traj = GetTrajPointsCirc(0, iters, iters);
   auto gt_x = std::get<0>(gt_traj);
   auto gt_y = std::get<1>(gt_traj);
 
-  std::cout << coeffs << std::endl;
-
   if (true){
     plt::figure(1);
-    plt::subplot(3, 1, 1);
-    plt::title("X Values");
-    plt::plot(x_vals);
-    plt::subplot(3, 1, 2);
-    plt::title("Y Values");
-    plt::plot(y_vals);
-    plt::subplot(3, 1, 3);
-    plt::title("PSI Values");
-    plt::plot(psi_vals);
+    // plt::subplot(3, 1, 1);
+    // plt::title("X Values");
+    // plt::plot(x_vals);
+    // plt::subplot(3, 1, 2);
+    // plt::title("Y Values");
+    // plt::plot(y_vals);
+    // plt::subplot(3, 1, 3);
+    // plt::title("PSI Values");
+    // plt::plot(psi_vals);
 
-    plt::figure(2);
-    plt::subplot(2, 1, 1);
-    plt::title("V");
-    plt::plot(v_vals);
-    plt::subplot(2, 1, 2);
-    plt::title("W");
-    plt::plot(w_vals);
+    // plt::figure(2);
+    // plt::subplot(2, 1, 1);
+    // plt::title("V");
+    // plt::plot(v_vals);
+    // plt::subplot(2, 1, 2);
+    // plt::title("W");
+    // plt::plot(w_vals);
 
-    plt::figure(3);
-    plt::subplot(2, 1, 1);
-    plt::title("CTE");
-    plt::plot(cte_vals);
-    plt::subplot(2, 1, 2);
-    plt::title("EPSI");
-    plt::plot(epsi_vals);
+    // plt::figure(3);
+    // plt::subplot(2, 1, 1);
+    // plt::title("CTE");
+    // plt::plot(cte_vals);
+    // plt::subplot(2, 1, 2);
+    // plt::title("EPSI");
+    // plt::plot(epsi_vals);
 
-    plt::figure(4);
-    plt::subplot(2, 1, 1);
-    plt::title("Acc");
-    plt::plot(a_vals);
-    plt::subplot(2, 1, 2);
-    plt::title("Anaugular Acc");
-    plt::plot(alpha_vals);
+    // plt::figure(4);
+    // plt::subplot(2, 1, 1);
+    // plt::title("Acc");
+    // plt::plot(a_vals);
+    // plt::subplot(2, 1, 2);
+    // plt::title("Anaugular Acc");
+    // plt::plot(alpha_vals);
 
-    plt::figure(5);
+    // plt::figure(5);
     plt::plot(gt_x, gt_y, "r--"); //plot the x,y
     plt::plot(x_vals, y_vals); //plot the x,y
     plt::grid(true); //show grid

@@ -68,3 +68,34 @@ fg[1 + cte_start_ + t] = cte1 - (f0 - y0);
 fg[1 + epsi_start_ + t] = epsi1 - (psi0 - psides0);
 => 여기가 잘못된 것 같음!
 
+Nan issue 
+ref : https://github.com/coin-or/CppAD/discussions/89
+
+coeffs = polyfit(x_veh, y_veh, 1);
+=> 여기서 nan 발생...
+
+traj_x : 6.12323e-17
+traj_x : 0.0314108
+traj_x : 0.0627905
+traj_x : 0.0941083
+traj_x : 0.125333
+traj_y : 0
+traj_y : 0.00049344
+traj_y : 0.00197327
+traj_y : 0.00443804
+traj_y : 0.0078853
+-0.000987169
+   0.0628928
+
+traj_x : 6.12323e-17
+traj_x : 0.0314108
+traj_x : 0.0627905
+traj_x : 0.0941083
+traj_x : 0.125333
+traj_y : 0
+traj_y : 0.00049344
+traj_y : 0.00197327
+traj_y : 0.00443804
+traj_y : 0.0078853
+i : 0 / coeffs : -0.000987169
+   0.0628928
