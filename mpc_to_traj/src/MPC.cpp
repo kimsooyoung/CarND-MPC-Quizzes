@@ -60,18 +60,18 @@ public:
     _w_delta_a = params.find("W_DELTA_A") != params.end() ? params.at("W_DELTA_A") : _w_delta_a;
     _w_delta_alpha = params.find("W_DELTA_ALPHA") != params.end() ? params.at("W_DELTA_ALPHA") : _w_delta_alpha;
 
-    std::cout << "[FG_eval] mpc_step : " << mpc_step_ << std::endl;
-    std::cout << "[FG_eval] ref_v : " << ref_v_ << std::endl;
-    std::cout << "[FG_eval] dt : " << dt << std::endl;
+    // std::cout << "[FG_eval] mpc_step : " << mpc_step_ << std::endl;
+    // std::cout << "[FG_eval] ref_v : " << ref_v_ << std::endl;
+    // std::cout << "[FG_eval] dt : " << dt << std::endl;
 
-    std::cout << "[FG_eval] _w_cte : " << _w_cte << std::endl;
-    std::cout << "[FG_eval] _w_epsi : " << _w_epsi << std::endl;
-    std::cout << "[FG_eval] _w_vel : " << _w_vel << std::endl;
+    // std::cout << "[FG_eval] _w_cte : " << _w_cte << std::endl;
+    // std::cout << "[FG_eval] _w_epsi : " << _w_epsi << std::endl;
+    // std::cout << "[FG_eval] _w_vel : " << _w_vel << std::endl;
 
-    std::cout << "[FG_eval] _w_a : " << _w_a << std::endl;
-    std::cout << "[FG_eval] _w_alpha : " << _w_alpha << std::endl;
-    std::cout << "[FG_eval] _w_delta_a : " << _w_delta_a << std::endl;
-    std::cout << "[FG_eval] _w_delta_alpha : " << _w_delta_alpha << std::endl;
+    // std::cout << "[FG_eval] _w_a : " << _w_a << std::endl;
+    // std::cout << "[FG_eval] _w_alpha : " << _w_alpha << std::endl;
+    // std::cout << "[FG_eval] _w_delta_a : " << _w_delta_a << std::endl;
+    // std::cout << "[FG_eval] _w_delta_alpha : " << _w_delta_alpha << std::endl;
 
     x_start_     = 0;
     y_start_     = x_start_ + mpc_step_;

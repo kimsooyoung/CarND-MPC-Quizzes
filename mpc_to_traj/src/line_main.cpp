@@ -34,11 +34,8 @@ int main() {
   int traj_sampling_num = int(iters * dt);
 
   // initial trajectory
-
   // Case 1. line trajectory
   auto traj_points = GetTrajPointsLine(0, window_size, traj_sampling_num);
-  // Case 2. circular trajectory
-  // auto traj_points = GetTrajPointsCirc(0, window_size, traj_sampling_num);
   
   auto traj_x = std::get<0>(traj_points);
   auto traj_y = std::get<1>(traj_points);
@@ -192,16 +189,6 @@ int main() {
     plt::plot(gt_x, gt_y, "r--"); //plot the x,y
     plt::plot(x_vals, y_vals); //plot the x,y
     plt::grid(true); //show grid
-
-    // plt::subplot(3, 1, 1);
-    // plt::title("CTE");
-    // plt::plot(cte_vals);
-    // plt::subplot(3, 1, 2);
-    // plt::title("Delta (Radians)");
-    // plt::plot(delta_vals);
-    // plt::subplot(3, 1, 3);
-    // plt::title("Accel m/s^2");
-    // plt::plot(a_vals);
 
     plt::show();
   }
