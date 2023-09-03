@@ -26,12 +26,12 @@ int main() {
 
   // const double pi = M_PI;
 
-  const int window_size = 25;
-  const int iters = 200;
-  const double dt = 0.05;
-  const double ref_v = 10.0;
+  const int window_size = 20;
+  const int iters = 400; // 200
+  const double dt = 0.1;
+  const double ref_v = 1.5;
 
-  int traj_sampling_num = int(iters * dt * 10);
+  int traj_sampling_num = int(iters * dt);
 
   // initial trajectory
 
@@ -78,6 +78,14 @@ int main() {
   mpc_params["MIN_ANG_ACC"] = -3.0;
   mpc_params["MAX_ANG_ACC"] = 3.0;
 
+  mpc_params["W_CTE"] = 100.0;
+  mpc_params["W_EPSI"] = 100.0;
+  mpc_params["W_V"] = 100.0;
+  mpc_params["W_A"] = 50.0;
+  mpc_params["W_ALPHA"] = 50.0;
+  mpc_params["W_DELTA_A"] = 0.0;
+  mpc_params["W_DELTA_ALPHA"] = 0.0;
+
   VectorXd state(7);
   state << x, y, psi, v, w, cte, epsi;
 
@@ -95,6 +103,9 @@ int main() {
   vector<double> epsi_vals = {state[6]};
   vector<double> a_vals;
   vector<double> alpha_vals;
+
+  // auto vars = mpc.Solve(state, coeffs);
+  // return 0;
 
   for (size_t i = 0; i < iters; ++i) {
 

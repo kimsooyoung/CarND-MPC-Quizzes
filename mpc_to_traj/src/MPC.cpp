@@ -20,6 +20,10 @@ private:
   int cte_start_, epsi_start_;
   int a_start_, alpha_start_;
 
+  double _w_cte, _w_epsi, _w_vel;
+  double _w_a, _w_alpha;
+  double _w_delta_a, _w_delta_alpha;
+
   double dt;
   double ref_v_;
 
@@ -46,10 +50,28 @@ public:
     mpc_step_ = params.find("STEPS") != params.end() ? params.at("STEPS") : mpc_step_;
     ref_v_   = params.find("REF_V") != params.end() ? params.at("REF_V") : ref_v_;
     dt = params.find("DT") != params.end() ? params.at("DT") : dt;
+    
+    _w_cte   = params.find("W_CTE") != params.end()   ? params.at("W_CTE") : _w_cte;
+    _w_epsi  = params.find("W_EPSI") != params.end()  ? params.at("W_EPSI") : _w_epsi;
+    _w_vel   = params.find("W_V") != params.end()     ? params.at("W_V") : _w_vel;
 
-    // std::cout << "[FG_eval] mpc_step : " << mpc_step_ << std::endl;
-    // std::cout << "[FG_eval] ref_v : " << ref_v_ << std::endl;
-    // std::cout << "[FG_eval] dt : " << dt << std::endl;
+    _w_a = params.find("W_A") != params.end()     ? params.at("W_A") : _w_a;
+    _w_alpha = params.find("W_ALPHA") != params.end() ? params.at("W_ALPHA") : _w_alpha;
+    _w_delta_a = params.find("W_DELTA_A") != params.end() ? params.at("W_DELTA_A") : _w_delta_a;
+    _w_delta_alpha = params.find("W_DELTA_ALPHA") != params.end() ? params.at("W_DELTA_ALPHA") : _w_delta_alpha;
+
+    std::cout << "[FG_eval] mpc_step : " << mpc_step_ << std::endl;
+    std::cout << "[FG_eval] ref_v : " << ref_v_ << std::endl;
+    std::cout << "[FG_eval] dt : " << dt << std::endl;
+
+    std::cout << "[FG_eval] _w_cte : " << _w_cte << std::endl;
+    std::cout << "[FG_eval] _w_epsi : " << _w_epsi << std::endl;
+    std::cout << "[FG_eval] _w_vel : " << _w_vel << std::endl;
+
+    std::cout << "[FG_eval] _w_a : " << _w_a << std::endl;
+    std::cout << "[FG_eval] _w_alpha : " << _w_alpha << std::endl;
+    std::cout << "[FG_eval] _w_delta_a : " << _w_delta_a << std::endl;
+    std::cout << "[FG_eval] _w_delta_alpha : " << _w_delta_alpha << std::endl;
 
     x_start_     = 0;
     y_start_     = x_start_ + mpc_step_;
@@ -140,6 +162,7 @@ MPC::~MPC() {}
 void MPC::LoadParams(const std::map<std::string, double> &params){
 
   params_ = params;
+
   mpc_step_ = params.find("STEPS") != params.end() ? params.at("STEPS") : mpc_step_;
   min_acc_ = params.find("MIN_ACC") != params.end() ? params.at("MIN_ACC") : mpc_step_;
   max_acc_ = params.find("MAX_ACC") != params.end() ? params.at("MAX_ACC") : mpc_step_;
