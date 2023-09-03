@@ -26,7 +26,7 @@ int main() {
 
   const double pi = M_PI;
 
-  const int window_size = 5;
+  const int window_size = 10;
   const int iters = 200; // 200
   const double dt = 0.1;
 
@@ -75,9 +75,9 @@ int main() {
   mpc_params["MIN_ANG_ACC"] = -3.0;
   mpc_params["MAX_ANG_ACC"] = 3.0;
 
-  mpc_params["W_CTE"] = 100.0;
-  mpc_params["W_EPSI"] = 500.0;
-  mpc_params["W_V"] = 100.0;
+  mpc_params["W_CTE"] = 500.0;
+  mpc_params["W_EPSI"] = 100.0;
+  mpc_params["W_V"] = 10.0;
   mpc_params["W_A"] = 1.0;
   mpc_params["W_ALPHA"] = 1.0;
   mpc_params["W_DELTA_A"] = 0.0;
@@ -104,8 +104,8 @@ int main() {
   // auto vars = mpc.Solve(state, coeffs);
   // return 0;
 
-  // for (size_t i = 0; i < iters; ++i) {
-  for (size_t i = 0; i < 50; ++i) {
+  for (size_t i = 0; i < iters; ++i) {
+  // for (size_t i = 0; i < 50; ++i) {
 
     auto vars = mpc.Solve(state, coeffs);
 
@@ -171,54 +171,44 @@ int main() {
 
   if (true){
     plt::figure(1);
-    // plt::subplot(3, 1, 1);
-    // plt::title("X Values");
-    // plt::plot(x_vals);
-    // plt::subplot(3, 1, 2);
-    // plt::title("Y Values");
-    // plt::plot(y_vals);
-    // plt::subplot(3, 1, 3);
-    // plt::title("PSI Values");
-    // plt::plot(psi_vals);
+    plt::subplot(3, 1, 1);
+    plt::title("X Values");
+    plt::plot(x_vals);
+    plt::subplot(3, 1, 2);
+    plt::title("Y Values");
+    plt::plot(y_vals);
+    plt::subplot(3, 1, 3);
+    plt::title("PSI Values");
+    plt::plot(psi_vals);
 
-    // plt::figure(2);
-    // plt::subplot(2, 1, 1);
-    // plt::title("V");
-    // plt::plot(v_vals);
-    // plt::subplot(2, 1, 2);
-    // plt::title("W");
-    // plt::plot(w_vals);
+    plt::figure(2);
+    plt::subplot(2, 1, 1);
+    plt::title("V");
+    plt::plot(v_vals);
+    plt::subplot(2, 1, 2);
+    plt::title("W");
+    plt::plot(w_vals);
 
-    // plt::figure(3);
-    // plt::subplot(2, 1, 1);
-    // plt::title("CTE");
-    // plt::plot(cte_vals);
-    // plt::subplot(2, 1, 2);
-    // plt::title("EPSI");
-    // plt::plot(epsi_vals);
+    plt::figure(3);
+    plt::subplot(2, 1, 1);
+    plt::title("CTE");
+    plt::plot(cte_vals);
+    plt::subplot(2, 1, 2);
+    plt::title("EPSI");
+    plt::plot(epsi_vals);
 
-    // plt::figure(4);
-    // plt::subplot(2, 1, 1);
-    // plt::title("Acc");
-    // plt::plot(a_vals);
-    // plt::subplot(2, 1, 2);
-    // plt::title("Anaugular Acc");
-    // plt::plot(alpha_vals);
+    plt::figure(4);
+    plt::subplot(2, 1, 1);
+    plt::title("Acc");
+    plt::plot(a_vals);
+    plt::subplot(2, 1, 2);
+    plt::title("Anaugular Acc");
+    plt::plot(alpha_vals);
 
-    // plt::figure(5);
+    plt::figure(5);
     plt::plot(gt_x, gt_y, "r--"); //plot the x,y
     plt::plot(x_vals, y_vals); //plot the x,y
     plt::grid(true); //show grid
-
-    // plt::subplot(3, 1, 1);
-    // plt::title("CTE");
-    // plt::plot(cte_vals);
-    // plt::subplot(3, 1, 2);
-    // plt::title("Delta (Radians)");
-    // plt::plot(delta_vals);
-    // plt::subplot(3, 1, 3);
-    // plt::title("Accel m/s^2");
-    // plt::plot(a_vals);
 
     plt::show();
   }
