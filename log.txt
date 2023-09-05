@@ -2,15 +2,16 @@
 [] mpc trajectory 개발
     [x] 원 traj 구현
     [x] parameter 변경 되는지 확인
-    [ ] 원 잘 따라가는지 확인 => weight 수정
-    [ ] a, alpha가 안바뀐다?!
+    [x] 원 잘 따라가는지 확인 => weight 수정
+    [x] a, alpha가 안바뀐다?!
 
 => 직선 궤적부터 해보자.
-[ ] 되는 상황부터 좀 보자.
-[ ] iteration=1로 둔 다음 state 변화를 살펴보자.
+[x] 되는 상황부터 좀 보자.
+[x] iteration=1로 둔 다음 state 변화를 살펴보자.
 
-[] animation plotting
-[] ros2에 입히기
+[ ] robot frame 기준으로 circular trajectory 다시 짜기
+[ ] animation plotting
+[ ] ros2에 입히기
 
 
 
