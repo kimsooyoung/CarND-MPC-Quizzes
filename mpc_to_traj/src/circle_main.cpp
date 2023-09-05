@@ -115,6 +115,12 @@ int main() {
   // auto vars = mpc.Solve(state, coeffs);
   // return 0;
 
+  // get ground truth trajectory
+  auto gt_traj = GetTrajPointsCirc(0, iters, iters);
+  auto gt_x = std::get<0>(gt_traj);
+  auto gt_y = std::get<1>(gt_traj);
+
+
   // for (size_t i = 0; i < iters; ++i) {
   for (size_t i = 0; i < 200; ++i) {
 
@@ -160,15 +166,15 @@ int main() {
         y_veh[i] = -traj_x[i] * sinpsi + traj_y[i] * cospsi + x_world * sinpsi - y_world * cospsi;
     }
 
-    for (auto x : traj_x)
-        std::cout << "traj_x : " << x << std::endl;
-    for (auto y : traj_y)
-        std::cout << "traj_y : " << y << std::endl;
+    // for (auto x : traj_x)
+    //     std::cout << "traj_x : " << x << std::endl;
+    // for (auto y : traj_y)
+    //     std::cout << "traj_y : " << y << std::endl;
 
-    for (auto x : x_veh)
-        std::cout << "x_veh : " << x << std::endl;
-    for (auto y : y_veh)
-        std::cout << "y_veh : " << y << std::endl;
+    // for (auto x : x_veh)
+    //     std::cout << "x_veh : " << x << std::endl;
+    // for (auto y : y_veh)
+    //     std::cout << "y_veh : " << y << std::endl;
 
     // for(int i = 0; i < window_size; i++) 
     // {
@@ -198,11 +204,13 @@ int main() {
     a_vals.push_back(cur_a);
     alpha_vals.push_back(cur_alpha);
 
+    // plotting
+    plt::clf();
+    plt::plot(gt_x, gt_y, "r--"); //plot the x,y
+    plt::grid(true); //show grid
+    plt::plot(x_vals, y_vals); //plot the x,y
+    plt::pause(0.01);
   }
-
-  auto gt_traj = GetTrajPointsCirc(0, iters, iters);
-  auto gt_x = std::get<0>(gt_traj);
-  auto gt_y = std::get<1>(gt_traj);
 
   if (true){
     plt::figure(1);

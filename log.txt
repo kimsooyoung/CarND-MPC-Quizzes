@@ -9,7 +9,7 @@
 [x] 되는 상황부터 좀 보자.
 [x] iteration=1로 둔 다음 state 변화를 살펴보자.
 
-[ ] robot frame 기준으로 circular trajectory 다시 짜기
+[x] robot frame 기준으로 circular trajectory 다시 짜기
 [ ] animation plotting
 [ ] ros2에 입히기
 
