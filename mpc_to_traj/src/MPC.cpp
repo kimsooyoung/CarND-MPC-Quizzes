@@ -89,19 +89,19 @@ public:
     fg[0] = 0;
     
     for (auto i = 0; i < mpc_step_; ++i) {
-      fg[0] += 1 * CppAD::pow(vars[cte_start_ + i], 2);
-      fg[0] += 1 * CppAD::pow(vars[epsi_start_ + i], 2);
-      fg[0] += 1 * CppAD::pow(vars[v_start_ + i] - ref_v_, 2);
+      fg[0] += _w_cte * CppAD::pow(vars[cte_start_ + i], 2);
+      fg[0] += _w_epsi * CppAD::pow(vars[epsi_start_ + i], 2);
+      fg[0] += _w_vel * CppAD::pow(vars[v_start_ + i] - ref_v_, 2);
     }
 
     for (auto i = 0; i < mpc_step_ - 1; i++){
-      fg[0] += 1 * CppAD::pow(vars[a_start_ + i], 2);
-      fg[0] += 1 * CppAD::pow(vars[alpha_start_ + i], 2);
+      fg[0] += _w_a * CppAD::pow(vars[a_start_ + i], 2);
+      fg[0] += _w_alpha * CppAD::pow(vars[alpha_start_ + i], 2);
     }
 
     for (auto i = 0; i < mpc_step_ - 2; i++){
-      fg[0] += 1 * CppAD::pow(vars[a_start_ + i + 1] - vars[a_start_ + i], 2);
-      fg[0] += 1 * CppAD::pow(vars[alpha_start_ + i + 1] - vars[alpha_start_ + i], 2);
+      fg[0] += _w_delta_a * CppAD::pow(vars[a_start_ + i + 1] - vars[a_start_ + i], 2);
+      fg[0] += _w_delta_alpha * CppAD::pow(vars[alpha_start_ + i + 1] - vars[alpha_start_ + i], 2);
     }
 
     fg[1 + x_start_] = vars[x_start_];

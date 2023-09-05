@@ -83,13 +83,13 @@ int main() {
   mpc_params["MIN_ANG_ACC"] = -3.0;
   mpc_params["MAX_ANG_ACC"] = 3.0;
 
-  mpc_params["W_CTE"] = 100.0;
-  mpc_params["W_EPSI"] = 100.0;
-  mpc_params["W_V"] = 10.0;
+  mpc_params["W_CTE"] = 450.0;
+  mpc_params["W_EPSI"] = 30.0;
+  mpc_params["W_V"] = 20.0;
   mpc_params["W_A"] = 1.0;
   mpc_params["W_ALPHA"] = 1.0;
-  mpc_params["W_DELTA_A"] = 0.0;
-  mpc_params["W_DELTA_ALPHA"] = 0.0;
+  mpc_params["W_DELTA_A"] = 1.0;
+  mpc_params["W_DELTA_ALPHA"] = 1.0;
 
   VectorXd state(7);
   state << x, y, psi, v, w, cte, epsi;
@@ -116,7 +116,7 @@ int main() {
   // return 0;
 
   // for (size_t i = 0; i < iters; ++i) {
-  for (size_t i = 0; i < 100; ++i) {
+  for (size_t i = 0; i < 200; ++i) {
 
     auto vars = mpc.Solve(state, coeffs);
 
@@ -145,16 +145,6 @@ int main() {
     cout << "alpha = " << vars[8] << endl;
     cout << endl;
 
-    x_vals.push_back(x_world);
-    y_vals.push_back(y_world);
-    psi_vals.push_back(psi_world);
-    v_vals.push_back(cur_v);
-    w_vals.push_back(cur_w);
-    cte_vals.push_back(cur_cte);
-    epsi_vals.push_back(cur_epsi);
-    a_vals.push_back(cur_a);
-    alpha_vals.push_back(cur_alpha);
-
     // get new trajectory
     traj_points = GetTrajPointsCirc(i, window_size, iters);
     traj_x = std::get<0>(traj_points);
@@ -166,9 +156,19 @@ int main() {
 
     for(int i = 0; i < window_size; i++) 
     {
-        x_veh[i] = traj_x[i] * cospsi + traj_y[i] * sinpsi - x_world;
-        y_veh[i] = -traj_x[i] * sinpsi + traj_y[i] * cospsi - y_world;
+        x_veh[i] = traj_x[i] * cospsi + traj_y[i] * sinpsi - x_world * cospsi - y_world * sinpsi;
+        y_veh[i] = -traj_x[i] * sinpsi + traj_y[i] * cospsi + x_world * sinpsi - y_world * cospsi;
     }
+
+    for (auto x : traj_x)
+        std::cout << "traj_x : " << x << std::endl;
+    for (auto y : traj_y)
+        std::cout << "traj_y : " << y << std::endl;
+
+    for (auto x : x_veh)
+        std::cout << "x_veh : " << x << std::endl;
+    for (auto y : y_veh)
+        std::cout << "y_veh : " << y << std::endl;
 
     // for(int i = 0; i < window_size; i++) 
     // {
@@ -180,18 +180,24 @@ int main() {
 
     // 1rd order polynomial
     coeffs = polyfit(x_veh, y_veh, 1);
-    // std::cout << "i : " << i << " / coeffs : " << coeffs << std::endl;
+    std::cout << "i : " << i << "\ncoeffs : " << coeffs << std::endl;
 
     const double cte  = polyeval(coeffs, 0.0);
     const double epsi = atan(coeffs[1]);
 
     // update state
     state << 0.0, 0.0, 0.0, cur_v, cur_w, cte, epsi;
-  
-    // for (auto x : traj_x)
-    //     std::cout << "traj_x : " << x << std::endl;
-    // for (auto y : traj_y)
-    //     std::cout << "traj_y : " << y << std::endl;
+
+    x_vals.push_back(x_world);
+    y_vals.push_back(y_world);
+    psi_vals.push_back(psi_world);
+    v_vals.push_back(cur_v);
+    w_vals.push_back(cur_w);
+    cte_vals.push_back(cte);
+    epsi_vals.push_back(epsi);
+    a_vals.push_back(cur_a);
+    alpha_vals.push_back(cur_alpha);
+
   }
 
   auto gt_traj = GetTrajPointsCirc(0, iters, iters);
@@ -200,25 +206,25 @@ int main() {
 
   if (true){
     plt::figure(1);
-    plt::subplot(3, 1, 1);
-    plt::title("X Values");
-    plt::plot(x_vals);
-    plt::subplot(3, 1, 2);
-    plt::title("Y Values");
-    plt::plot(y_vals);
-    plt::subplot(3, 1, 3);
-    plt::title("PSI Values");
-    plt::plot(psi_vals);
+    // plt::subplot(3, 1, 1);
+    // plt::title("X Values");
+    // plt::plot(x_vals);
+    // plt::subplot(3, 1, 2);
+    // plt::title("Y Values");
+    // plt::plot(y_vals);
+    // plt::subplot(3, 1, 3);
+    // plt::title("PSI Values");
+    // plt::plot(psi_vals);
 
-    plt::figure(2);
-    plt::subplot(2, 1, 1);
-    plt::title("V");
-    plt::plot(v_vals);
-    plt::subplot(2, 1, 2);
-    plt::title("W");
-    plt::plot(w_vals);
+    // plt::figure(2);
+    // plt::subplot(2, 1, 1);
+    // plt::title("V");
+    // plt::plot(v_vals);
+    // plt::subplot(2, 1, 2);
+    // plt::title("W");
+    // plt::plot(w_vals);
 
-    plt::figure(3);
+    // plt::figure(3);
     plt::subplot(2, 1, 1);
     plt::title("CTE");
     plt::plot(cte_vals);
@@ -226,13 +232,13 @@ int main() {
     plt::title("EPSI");
     plt::plot(epsi_vals);
 
-    plt::figure(4);
-    plt::subplot(2, 1, 1);
-    plt::title("Acc");
-    plt::plot(a_vals);
-    plt::subplot(2, 1, 2);
-    plt::title("Anaugular Acc");
-    plt::plot(alpha_vals);
+    // plt::figure(4);
+    // plt::subplot(2, 1, 1);
+    // plt::title("Acc");
+    // plt::plot(a_vals);
+    // plt::subplot(2, 1, 2);
+    // plt::title("Anaugular Acc");
+    // plt::plot(alpha_vals);
 
     plt::figure(5);
     plt::plot(gt_x, gt_y, "r--"); //plot the x,y
