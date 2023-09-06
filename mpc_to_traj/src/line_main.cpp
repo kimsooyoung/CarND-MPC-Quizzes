@@ -76,7 +76,7 @@ int main() {
 
   mpc_params["W_CTE"] = 450.0;
   mpc_params["W_EPSI"] = 30.0;
-  mpc_params["W_V"] = 1.0;
+  mpc_params["W_V"] = 20.0;
   mpc_params["W_A"] = 1.0;
   mpc_params["W_ALPHA"] = 1.0;
   mpc_params["W_DELTA_A"] = 1.0;
