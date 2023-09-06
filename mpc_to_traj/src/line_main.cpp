@@ -27,7 +27,7 @@ int main() {
   // const double pi = M_PI;
 
   const int window_size = 20;
-  const int iters = 400; // 200
+  const int iters = 200; // 200
   const double dt = 0.1;
   const double ref_v = 1.5;
 
@@ -74,13 +74,13 @@ int main() {
   mpc_params["MIN_ANG_ACC"] = -3.0;
   mpc_params["MAX_ANG_ACC"] = 3.0;
 
-  mpc_params["W_CTE"] = 100.0;
-  mpc_params["W_EPSI"] = 100.0;
-  mpc_params["W_V"] = 100.0;
-  mpc_params["W_A"] = 50.0;
-  mpc_params["W_ALPHA"] = 50.0;
-  mpc_params["W_DELTA_A"] = 0.0;
-  mpc_params["W_DELTA_ALPHA"] = 0.0;
+  mpc_params["W_CTE"] = 450.0;
+  mpc_params["W_EPSI"] = 30.0;
+  mpc_params["W_V"] = 1.0;
+  mpc_params["W_A"] = 1.0;
+  mpc_params["W_ALPHA"] = 1.0;
+  mpc_params["W_DELTA_A"] = 1.0;
+  mpc_params["W_DELTA_ALPHA"] = 1.0;
 
   VectorXd state(7);
   state << x, y, psi, v, w, cte, epsi;

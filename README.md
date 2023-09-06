@@ -1,9 +1,3 @@
-# Deprecated Repository
-This repository is deprecated. Currently enrolled learners, if any, can: 
-- Utilize the https://knowledge.udacity.com/ forum to seek help on content-specific issues.
-- [Submit a support ticket](https://udacity.zendesk.com/hc/en-us/requests/new) if (learners are) blocked due to other reasons. 
-
-
 # CarND Controls Quizzes
 
 Quizzes for *Vehicle Models* and *Model Predictive Control* sections.
@@ -25,3 +19,19 @@ A solution for each quiz is presented in the solution directory.
 
 The *Global Kinematic Quiz* and *Polynomial Fitting* quizzes have all the dependencies in repo. For the *MPC* quiz
 you'll have to install Ipopt and CppAD.  Please refer to [this document](https://github.com/udacity/CarND-MPC-Quizzes/blob/master/install_Ipopt_CppAD.md) for installation instructions.
+
+```cpp
+sudo apt-get install cppad
+sudo apt-get install coinor-clp coinor-libclp-dev
+sudo apt-get install coinor-libipopt-dev
+
+# 22.04
+sudo apt-get install python3.10-dev
+# 20.04
+sudo apt-get install python3.8-dev
+```
+
+```python
+sudo apt-get install libeigen3-dev
+sudo ln -s /usr/include/eigen3/Eigen /usr/include/Eigen
+```

@@ -142,7 +142,7 @@ public:
           psides0 += i * coeffs_[i] * CppAD::pow(x0, i-1); // f'(x0)
 
       if (abs(psides0) < 1e-3)
-        psides0 = M_PI / 2.0;
+        psides0 = 0.0;
       else
         psides0 = CppAD::atan(psides0);
 
