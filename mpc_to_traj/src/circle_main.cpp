@@ -24,6 +24,8 @@ using std::cos;
 // 5. update states
 // 6. plot results
 
+bool plot_result = true;
+
 int main() {
 
   const double pi = M_PI;
@@ -120,7 +122,6 @@ int main() {
   auto gt_x = std::get<0>(gt_traj);
   auto gt_y = std::get<1>(gt_traj);
 
-
   // for (size_t i = 0; i < iters; ++i) {
   for (size_t i = 0; i < 200; ++i) {
 
@@ -176,14 +177,6 @@ int main() {
     // for (auto y : y_veh)
     //     std::cout << "y_veh : " << y << std::endl;
 
-    // for(int i = 0; i < window_size; i++) 
-    // {
-    //     const double dx = traj_x[i] - cur_x;
-    //     const double dy = traj_y[i] - cur_y;
-    //     x_veh[i] = dx * cospsi + dy * sinpsi;
-    //     y_veh[i] = dy * cospsi - dx * sinpsi;
-    // }
-
     // 1rd order polynomial
     coeffs = polyfit(x_veh, y_veh, 1);
     std::cout << "i : " << i << "\ncoeffs : " << coeffs << std::endl;
@@ -205,50 +198,47 @@ int main() {
     alpha_vals.push_back(cur_alpha);
 
     // plotting
-    plt::clf();
-    plt::plot(gt_x, gt_y, "r--"); //plot the x,y
-    plt::grid(true); //show grid
-    plt::plot(x_vals, y_vals); //plot the x,y
-    plt::pause(0.01);
+    // plt::clf();
+    // plt::plot(gt_x, gt_y, "r--"); //plot the x,y
+    // plt::grid(true); //show grid
+    // plt::plot(x_vals, y_vals); //plot the x,y
+    // plt::pause(0.01);
   }
 
-  if (true){
+  if (plot_result){
     plt::figure(1);
-    // plt::subplot(3, 1, 1);
-    // plt::title("X Values");
-    // plt::plot(x_vals);
-    // plt::subplot(3, 1, 2);
-    // plt::title("Y Values");
-    // plt::plot(y_vals);
-    // plt::subplot(3, 1, 3);
-    // plt::title("PSI Values");
-    // plt::plot(psi_vals);
+    plt::subplot(3, 4, 1);
+    plt::title("X Values");
+    plt::plot(x_vals);
+    plt::subplot(3, 4, 5);
+    plt::title("Y Values");
+    plt::plot(y_vals);
+    plt::subplot(3, 4, 9);
+    plt::title("PSI Values");
+    plt::plot(psi_vals);
 
-    // plt::figure(2);
-    // plt::subplot(2, 1, 1);
-    // plt::title("V");
-    // plt::plot(v_vals);
-    // plt::subplot(2, 1, 2);
-    // plt::title("W");
-    // plt::plot(w_vals);
+    plt::subplot(2, 4, 2);
+    plt::title("V");
+    plt::plot(v_vals, "r");
+    plt::subplot(2, 4, 6);
+    plt::title("W");
+    plt::plot(w_vals, "r");
 
-    // plt::figure(3);
-    plt::subplot(2, 1, 1);
+    plt::subplot(2, 4, 3);
+    plt::title("Acc");
+    plt::plot(a_vals, "b");
+    plt::subplot(2, 4, 7);
+    plt::title("Anaugular Acc");
+    plt::plot(alpha_vals, "b");
+
+    plt::subplot(2, 4, 4);
     plt::title("CTE");
-    plt::plot(cte_vals);
-    plt::subplot(2, 1, 2);
+    plt::plot(cte_vals, "g");
+    plt::subplot(2, 4, 8);
     plt::title("EPSI");
-    plt::plot(epsi_vals);
+    plt::plot(epsi_vals, "g");
 
-    // plt::figure(4);
-    // plt::subplot(2, 1, 1);
-    // plt::title("Acc");
-    // plt::plot(a_vals);
-    // plt::subplot(2, 1, 2);
-    // plt::title("Anaugular Acc");
-    // plt::plot(alpha_vals);
-
-    plt::figure(5);
+    plt::figure(2);
     plt::plot(gt_x, gt_y, "r--"); //plot the x,y
     plt::plot(x_vals, y_vals); //plot the x,y
     plt::grid(true); //show grid
