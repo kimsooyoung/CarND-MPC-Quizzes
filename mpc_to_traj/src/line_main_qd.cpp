@@ -80,15 +80,61 @@ int main() {
   VectorXd state(8);
   state << x, y, psi, v_x, v_y, w, cte_x, cte_y;
 
+  // prepare mpc parameters
+  map<string, double> mpc_params;
+  mpc_params["STEPS"] = window_size;
+  mpc_params["REF_V"] = ref_v;
+  mpc_params["DT"] = dt;
+  
+  mpc_params["MIN_ACC_X"] = -5.0;
+  mpc_params["MAX_ACC_X"] = 5.0;
+  mpc_params["MIN_ACC_Y"] = -5.0;
+  mpc_params["MAX_ACC_Y"] = 5.0;
+  mpc_params["MIN_ANG_ACC"] = -3.0;
+  mpc_params["MAX_ANG_ACC"] = 3.0;
+
+  mpc_params["W_CTE_X"] = 450.0;
+  mpc_params["W_CTE_Y"] = 450.0;
+  mpc_params["W_V"] = 20.0;
+  mpc_params["W_AX"] = 1.0;
+  mpc_params["W_AY"] = 1.0;
+  mpc_params["W_ALPHA"] = 1.0;
+  mpc_params["W_DELTA_AX"] = 1.0;
+  mpc_params["W_DELTA_AY"] = 1.0;
+  mpc_params["W_DELTA_ALPHA"] = 1.0;
+
   // create mpc instance
   MPCQD mpc;
-  // TODO Parameter Setup
-  // mpc.LoadParams(mpc_params);
+  mpc.LoadParams(mpc_params);
 
   // parse mpc result
   auto cur_traj_tup = std::make_tuple(robot_frame_x_traj, robot_frame_y_traj);
-  auto vars = mpc.Solve(state, cur_traj_tup);
+  
+  for(long unsigned int i = 0; i < 10; ++i)
+  {
+    auto vars = mpc.Solve(state, cur_traj_tup);
 
+    auto cur_x = vars[0];
+    auto cur_y = vars[1];
+    auto cur_psi = vars[2];
+    auto cur_vx = vars[3];
+    auto cur_vy = vars[4];
+    auto cur_w = vars[5];
+    auto cur_cte_x = vars[6];
+    auto cur_cte_y = vars[7];
+
+    std::cout << "cur_x : " << cur_x << std::endl;
+    std::cout << "cur_y : " << cur_y << std::endl;
+    std::cout << "cur_psi : " << cur_psi << std::endl;
+    std::cout << "cur_vx : " << cur_vx << std::endl;
+    std::cout << "cur_vy : " << cur_vy << std::endl;
+    std::cout << "cur_w : " << cur_w << std::endl;
+    std::cout << "cur_cte_x : " << cur_cte_x << std::endl;
+    std::cout << "cur_cte_y : " << cur_cte_y << std::endl;
+
+    state << cur_x, cur_y, cur_psi, cur_vx, cur_vy, cur_w, cur_cte_x, cur_cte_y;
+  }
+  
   // // TODO: 남은 trajectory 수가 window size보다 작을 때 처리
   // for(long unsigned int i = 0; i < 50; i++){
 

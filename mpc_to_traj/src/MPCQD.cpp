@@ -20,19 +20,18 @@ private:
   int cte_x_start_, cte_y_start_;
   int ax_start_, ay_start_, alpha_start_;
 
-  double _w_cte, _w_epsi, _w_vel;
-  double _w_a, _w_alpha;
-  double _w_delta_a, _w_delta_alpha;
+  double _w_cte_x, _w_cte_y, _w_vel;
+  double _w_ax, _w_ay, _w_alpha;
+  double _w_delta_ax, _w_delta_ay, _w_delta_alpha;
 
   double dt;
   double ref_v_;
 
 public:
-  // tuple<vector<double>, vector<double>> coeffs_;
-  VectorXd coeffs_;
+  tuple<vector<double>, vector<double>> trajs_;
 
-  FG_eval(VectorXd coeffs) { 
-    coeffs_ = coeffs; 
+  FG_eval(tuple<vector<double>, vector<double>> trajs) { 
+    trajs_ = trajs; 
     
     mpc_step_ = 40;
 
@@ -54,26 +53,32 @@ public:
     ref_v_   = params.find("REF_V") != params.end() ? params.at("REF_V") : ref_v_;
     dt = params.find("DT") != params.end() ? params.at("DT") : dt;
     
-    _w_cte   = params.find("W_CTE") != params.end()   ? params.at("W_CTE") : _w_cte;
-    _w_epsi  = params.find("W_EPSI") != params.end()  ? params.at("W_EPSI") : _w_epsi;
-    _w_vel   = params.find("W_V") != params.end()     ? params.at("W_V") : _w_vel;
+    _w_cte_x   = params.find("W_CTE_X") != params.end() ? params.at("W_CTE_X") : _w_cte_x;
+    _w_cte_y   = params.find("W_CTE_y") != params.end() ? params.at("W_CTE_y") : _w_cte_y;
+    _w_vel   = params.find("W_V") != params.end() ? params.at("W_V") : _w_vel;
 
-    _w_a = params.find("W_A") != params.end()     ? params.at("W_A") : _w_a;
+    _w_ax = params.find("W_AX") != params.end() ? params.at("W_AX") : _w_ax;
+    _w_ay = params.find("W_AY") != params.end() ? params.at("W_AY") : _w_ay;
     _w_alpha = params.find("W_ALPHA") != params.end() ? params.at("W_ALPHA") : _w_alpha;
-    _w_delta_a = params.find("W_DELTA_A") != params.end() ? params.at("W_DELTA_A") : _w_delta_a;
+    
+    _w_delta_ax = params.find("W_DELTA_AX") != params.end() ? params.at("W_DELTA_AX") : _w_delta_ax;
+    _w_delta_ay = params.find("W_DELTA_AY") != params.end() ? params.at("W_DELTA_AY") : _w_delta_ay;
     _w_delta_alpha = params.find("W_DELTA_ALPHA") != params.end() ? params.at("W_DELTA_ALPHA") : _w_delta_alpha;
 
     std::cout << "[FG_eval] mpc_step : " << mpc_step_ << std::endl;
     std::cout << "[FG_eval] ref_v : " << ref_v_ << std::endl;
     std::cout << "[FG_eval] dt : " << dt << std::endl;
 
-    std::cout << "[FG_eval] _w_cte : " << _w_cte << std::endl;
-    std::cout << "[FG_eval] _w_epsi : " << _w_epsi << std::endl;
+    std::cout << "[FG_eval] _w_cte_x : " << _w_cte_x << std::endl;
+    std::cout << "[FG_eval] _w_cte_y : " << _w_cte_y << std::endl;
     std::cout << "[FG_eval] _w_vel : " << _w_vel << std::endl;
 
-    std::cout << "[FG_eval] _w_a : " << _w_a << std::endl;
+    std::cout << "[FG_eval] _w_ax : " << _w_ax << std::endl;
+    std::cout << "[FG_eval] _w_ay : " << _w_ay << std::endl;
     std::cout << "[FG_eval] _w_alpha : " << _w_alpha << std::endl;
-    std::cout << "[FG_eval] _w_delta_a : " << _w_delta_a << std::endl;
+    
+    std::cout << "[FG_eval] _w_delta_ax : " << _w_delta_ax << std::endl;
+    std::cout << "[FG_eval] _w_delta_ay : " << _w_delta_ay << std::endl;
     std::cout << "[FG_eval] _w_delta_alpha : " << _w_delta_alpha << std::endl;
 
     x_start_     = 0;
@@ -89,77 +94,80 @@ public:
     alpha_start_ = ay_start_    + mpc_step_ - 1;
   }
 
-  // typedef CPPAD_TESTVECTOR(AD<double>) ADvector;
-  // void operator()(ADvector& fg, const ADvector& vars) {
-  //   fg[0] = 0;
+  typedef CPPAD_TESTVECTOR(AD<double>) ADvector;
+  void operator()(ADvector& fg, const ADvector& vars) {
+    fg[0] = 0;
     
-  //   for (auto i = 0; i < mpc_step_; ++i) {
-  //     fg[0] += _w_cte * CppAD::pow(vars[cte_start_ + i], 2);
-  //     fg[0] += _w_epsi * CppAD::pow(vars[epsi_start_ + i], 2);
-  //     fg[0] += _w_vel * CppAD::pow(vars[v_start_ + i] - ref_v_, 2);
-  //   }
+    for (auto i = 0; i < mpc_step_; ++i) {
+      fg[0] += _w_cte_x * CppAD::pow(vars[cte_x_start_ + i], 2);
+      fg[0] += _w_cte_y * CppAD::pow(vars[cte_y_start_ + i], 2);
 
-  //   for (auto i = 0; i < mpc_step_ - 1; i++){
-  //     fg[0] += _w_a * CppAD::pow(vars[a_start_ + i], 2);
-  //     fg[0] += _w_alpha * CppAD::pow(vars[alpha_start_ + i], 2);
-  //   }
+      auto vx = vars[vx_start_ + i];
+      auto vy = vars[vy_start_ + i];
+      // CppAD::sqrt has nan error
+      fg[0] += _w_vel * CppAD::pow( 
+        (vx * vx + vy * vy) - CppAD::pow(ref_v_, 2), 2
+      );
+    }
 
-  //   for (auto i = 0; i < mpc_step_ - 2; i++){
-  //     fg[0] += _w_delta_a * CppAD::pow(vars[a_start_ + i + 1] - vars[a_start_ + i], 2);
-  //     fg[0] += _w_delta_alpha * CppAD::pow(vars[alpha_start_ + i + 1] - vars[alpha_start_ + i], 2);
-  //   }
+    for (auto i = 0; i < mpc_step_ - 1; i++){
+      fg[0] += _w_ax * CppAD::pow(vars[ax_start_ + i], 2);
+      fg[0] += _w_ay * CppAD::pow(vars[ay_start_ + i], 2);
+      fg[0] += _w_alpha * CppAD::pow(vars[alpha_start_ + i], 2);
+    }
 
-  //   fg[1 + x_start_] = vars[x_start_];
-  //   fg[1 + y_start_] = vars[y_start_];
-  //   fg[1 + psi_start_] = vars[psi_start_];
-  //   fg[1 + v_start_] = vars[v_start_];
-  //   fg[1 + w_start_] = vars[w_start_];
-  //   fg[1 + cte_start_] = vars[cte_start_];
-  //   fg[1 + epsi_start_] = vars[epsi_start_];
+    for (auto i = 0; i < mpc_step_ - 2; i++){
+      fg[0] += _w_delta_ax * CppAD::pow(vars[ax_start_ + i + 1] - vars[ax_start_ + i], 2);
+      fg[0] += _w_delta_ay * CppAD::pow(vars[ay_start_ + i + 1] - vars[ay_start_ + i], 2);
+      fg[0] += _w_delta_alpha * CppAD::pow(vars[alpha_start_ + i + 1] - vars[alpha_start_ + i], 2);
+    }
 
-  //   for (auto t = 1; t < mpc_step_; ++t) {
+    fg[1 + x_start_] = vars[x_start_];
+    fg[1 + y_start_] = vars[y_start_];
+    fg[1 + psi_start_] = vars[psi_start_];
+    fg[1 + vx_start_] = vars[vx_start_];
+    fg[1 + vy_start_] = vars[vy_start_];
+    fg[1 + w_start_] = vars[w_start_];
+    fg[1 + cte_x_start_] = vars[cte_x_start_];
+    fg[1 + cte_y_start_] = vars[cte_y_start_];
 
-  //     AD<double> x1 = vars[x_start_ + t];
-  //     AD<double> y1 = vars[y_start_ + t];
-  //     AD<double> psi1 = vars[psi_start_ + t];
-  //     AD<double> v1 = vars[v_start_ + t];
-  //     AD<double> w1 = vars[w_start_ + t];
-  //     AD<double> cte1 = vars[cte_start_ + t];
-  //     AD<double> epsi1 = vars[epsi_start_ + t];
+    auto traj_x = std::get<0>(trajs_);
+    auto traj_y = std::get<1>(trajs_);
 
-  //     AD<double> x0 = vars[x_start_ + t - 1];
-  //     AD<double> y0 = vars[y_start_ + t - 1];
-  //     AD<double> psi0 = vars[psi_start_ + t - 1];
-  //     AD<double> v0 = vars[v_start_ + t - 1];
-  //     AD<double> w0 = vars[w_start_ + t - 1];
-  //     AD<double> cte0 = vars[cte_start_ + t - 1];
-  //     AD<double> epsi0 = vars[epsi_start_ + t - 1];
+    for (auto t = 1; t < mpc_step_; ++t) {
 
-  //     AD<double> a0 = vars[a_start_ + t - 1];
-  //     AD<double> alpha0 = vars[alpha_start_ + t - 1];
+      AD<double> x1 = vars[x_start_ + t];
+      AD<double> y1 = vars[y_start_ + t];
+      AD<double> psi1 = vars[psi_start_ + t];
+      AD<double> vx1 = vars[vx_start_ + t];
+      AD<double> vy1 = vars[vy_start_ + t];
+      AD<double> w1 = vars[w_start_ + t];
+      AD<double> cte_x1 = vars[cte_x_start_ + t];
+      AD<double> cte_y1 = vars[cte_y_start_ + t];
 
-  //     AD<double> f0 = 0.0;
-  //     for (int i = 0; i < coeffs_.size(); i++)
-  //       f0 += coeffs_[i] * CppAD::pow(x0, i);
+      AD<double> x0 = vars[x_start_ + t - 1];
+      AD<double> y0 = vars[y_start_ + t - 1];
+      AD<double> psi0 = vars[psi_start_ + t - 1];
+      AD<double> vx0 = vars[vx_start_ + t - 1];
+      AD<double> vy0 = vars[vy_start_ + t - 1];
+      AD<double> w0 = vars[w_start_ + t - 1];
+      AD<double> cte_x0 = vars[cte_x_start_ + t - 1];
+      AD<double> cte_y0 = vars[cte_y_start_ + t - 1];
 
-  //     AD<double> psides0 = 0.0;
-  //     for (int i = 1; i < coeffs_.size(); i++) 
-  //         psides0 += i * coeffs_[i] * CppAD::pow(x0, i-1); // f'(x0)
+      AD<double> ax0 = vars[ax_start_ + t - 1];
+      AD<double> ay0 = vars[ay_start_ + t - 1];
+      AD<double> alpha0 = vars[alpha_start_ + t - 1];
 
-  //     if (abs(psides0) < 1e-3)
-  //       psides0 = 0.0;
-  //     else
-  //       psides0 = CppAD::atan(psides0);
-
-  //     fg[1 + x_start_ + t] = x1 - (x0 + v0 * CppAD::cos(psi0) * dt);
-  //     fg[1 + y_start_ + t] = y1 - (y0 + v0 * CppAD::sin(psi0) * dt);
-  //     fg[1 + psi_start_ + t] = psi1 - (psi0 + w0 * dt);
-  //     fg[1 + v_start_ + t] = v1 - (v0 + a0 * dt);
-  //     fg[1 + w_start_ + t] = w1 - (w0 + alpha0 * dt);
-  //     fg[1 + cte_start_ + t] = cte1 - ((f0 - y0));
-  //     fg[1 + epsi_start_ + t] = epsi1 - ((psi0 - psides0));
-  //   }
-  // }
+      fg[1 + x_start_ + t] = x1 - (x0 + vx0 * dt);
+      fg[1 + y_start_ + t] = y1 - (y0 + vy0 * dt);
+      fg[1 + psi_start_ + t] = psi1 - (psi0 + w0 * dt);
+      fg[1 + vx_start_ + t] = vx1 - (vx0 + ax0 * dt);
+      fg[1 + vy_start_ + t] = vy1 - (vy0 + ay0 * dt);
+      fg[1 + w_start_ + t] = w1 - (w0 + alpha0 * dt);
+      fg[1 + cte_x_start_ + t] = cte_x1 - (cte_x0 - traj_x[t-1]);
+      fg[1 + cte_y_start_ + t] = cte_y1 - (cte_y0 - traj_y[t-1]);
+    }
+  }
 };
 
 MPCQD::MPCQD() {}
@@ -188,6 +196,7 @@ void MPCQD::LoadParams(const std::map<std::string, double> &params){
   w_start_     = vy_start_ + mpc_step_;
   cte_x_start_ = w_start_ + mpc_step_;
   cte_y_start_ = cte_x_start_ + mpc_step_;
+  
   ax_start_    = cte_y_start_ + mpc_step_;
   ay_start_    = ax_start_ + mpc_step_ - 1;
   alpha_start_ = ay_start_ + mpc_step_ - 1;
@@ -279,28 +288,27 @@ std::vector<double> MPCQD::Solve(const VectorXd &x0, const tuple<vector<double>,
   constraints_upperbound[cte_x_start_] = cte_x;
   constraints_upperbound[cte_y_start_] = cte_y;
 
-  // FG_eval fg_eval(trajs);
-  // fg_eval.LoadParams(params_);
+  FG_eval fg_eval(trajs);
+  fg_eval.LoadParams(params_);
 
-  // std::string options;
-  // options += "Integer print_level  0\n";
-  // options += "Sparse  true        forward\n";
-  // options += "Sparse  true        reverse\n";
+  std::string options;
+  options += "Integer print_level  0\n";
+  options += "Sparse  true        forward\n";
+  options += "Sparse  true        reverse\n";
 
-  // CppAD::ipopt::solve_result<Dvector> solution;
+  CppAD::ipopt::solve_result<Dvector> solution;
   
-  // CppAD::ipopt::solve<Dvector, FG_eval>(
-  //   options, vars, vars_lowerbound, vars_upperbound, 
-  //   constraints_lowerbound, constraints_upperbound, 
-  //   fg_eval, solution
-  // );
+  CppAD::ipopt::solve<Dvector, FG_eval>(
+    options, vars, vars_lowerbound, vars_upperbound, 
+    constraints_lowerbound, constraints_upperbound, 
+    fg_eval, solution
+  );
 
-  // bool ok = true;
-  // ok &= solution.status == CppAD::ipopt::solve_result<Dvector>::success;
+  bool ok = true;
+  ok &= solution.status == CppAD::ipopt::solve_result<Dvector>::success;
   
   // auto cost = solution.obj_value;
-  // auto answer = solution.x;
-  auto answer = vars;
+  auto answer = solution.x;
 
   return {
     answer[x_start_ + 1],  answer[y_start_ + 1], answer[psi_start_ + 1], 
