@@ -3,7 +3,7 @@
 #include <vector>
 #include "traj_helper.h"
 #include "helpers.h"
-#include "MPC.h"
+#include "MPCQP.h"
 
 namespace plt = matplotlibcpp;
 
@@ -31,175 +31,91 @@ int main() {
   const double dt = 0.1;
   const double ref_v = 1.5; // v_xy
 
-  int traj_sampling_num = int(iters * dt);
+  // int traj_sampling_num = int(iters * dt);
+  int traj_sampling_num = 100;
 
-  // initial trajectory
-  // Case 1. line trajectory
-  auto traj_points = GetTrajPointsLine(0, window_size, traj_sampling_num);
-  
-  auto traj_x = std::get<0>(traj_points);
-  auto traj_y = std::get<1>(traj_points);
+  // Retrieve Full Trajectory
+  // 10m를 200번만에 간다고 하자.
+  auto traj_points = GetTrajPointsLineWithOption(0, iters, 10.0, iters);
+  auto full_traj_x = std::get<0>(traj_points);
+  auto full_traj_y = std::get<1>(traj_points);
 
+  vector<double> cur_x_traj(window_size);
+  vector<double> cur_y_traj(window_size);  
 
-  for(long unsigned int i = 0; i < window_size; ++i)
+  for(long unsigned int j = 0; j < window_size; j++)
   {
-    x_veh[i] = traj_x[i];
-    y_veh[i] = traj_y[i];
+    cur_x_traj[j] = full_traj_x[0 + j];
+    cur_y_traj[j] = full_traj_y[0 + j];
   }
 
-  // initial state
+  // initial state 선언
   double x = 0.0;
   double y = 0.0;
   double psi = 0.0;
   double v_x = 0.0;
   double v_y = 0.0;
   double w = 0.0;
-
-  // convert trajectories into robot frame
-  cospsi = cos(psi);
-  sinpsi = sin(psi);
-
-  VectorXd x_veh(window_size);
-  VectorXd y_veh(window_size);
-
-  for(int i = 0; i < window_size; i++) 
-  {
-      x_veh[i] = traj_x[i] * cospsi + traj_y[i] * sinpsi - x_world * cospsi - y_world * sinpsi;
-      y_veh[i] = -traj_x[i] * sinpsi + traj_y[i] * cospsi + x_world * sinpsi - y_world * cospsi;
-  }
-
-  // We'll use robot frame, therefore cte = 0 is our goal.
-  double cte_x = x_veh[0] - x;
-  double cte_y = y_veh[0] - y;
+  double cte_x = 0.0;
+  double cte_y = 0.0;
   
-  // prepare parameters
-  map<string, double> mpc_params;
-  mpc_params["STEPS"] = window_size;
-  mpc_params["REF_V"] = ref_v;
-  mpc_params["DT"] = dt;
-  mpc_params["MIN_ACC"] = -5.0;
-  mpc_params["MAX_ACC"] = 5.0;
-  mpc_params["MIN_ANG_ACC"] = -3.0;
-  mpc_params["MAX_ANG_ACC"] = 3.0;
+  // trajectory를 robot frame으로 변환
+  // initial trajectory transformation
+  double cospsi = cos(psi);
+  double sinpsi = sin(psi);
+  
+  vector<double> robot_frame_x_traj(window_size);
+  vector<double> robot_frame_y_traj(window_size);
 
-  mpc_params["W_CTE"] = 450.0;
-  mpc_params["W_EPSI"] = 30.0;
-  mpc_params["W_V"] = 20.0;
-  mpc_params["W_A"] = 1.0;
-  mpc_params["W_ALPHA"] = 1.0;
-  mpc_params["W_DELTA_A"] = 1.0;
-  mpc_params["W_DELTA_ALPHA"] = 1.0;
+  for(long unsigned int i = 0; i < window_size; ++i)
+  {
+    const double dx = cur_x_traj[i] - x;
+    const double dy = cur_y_traj[i] - y;
 
+    robot_frame_x_traj[i] = dx * cospsi + dy * sinpsi;
+    robot_frame_y_traj[i] = dy * cospsi - dx * sinpsi;
+  }
+  
+  // MPC 구현
   VectorXd state(8);
   state << x, y, psi, v_x, v_y, w, cte_x, cte_y;
 
   // create mpc instance
   MPC mpc;
-  mpc.LoadParams(mpc_params);
+  // TODO Parameter Setup
+  // mpc.LoadParams(mpc_params);
 
-  // output container
-  vector<double> x_vals = {state[0]};
-  vector<double> y_vals = {state[1]};
-  vector<double> psi_vals = {state[2]};
-  vector<double> v_x_vals = {state[3]};
-  vector<double> v_y_vals = {state[3]};
-  vector<double> w_vals = {state[4]};
-  vector<double> cte_x_vals = {state[5]};
-  vector<double> cte_y_vals = {state[5]};
-  vector<double> a_vals;
-  vector<double> alpha_vals;
+  // parse mpc result
+  auto cur_traj_tup = std::make_tuple(robot_frame_x_traj, robot_frame_y_traj);
+  auto vars = mpc.Solve(state, cur_traj_tup);
 
-  // auto vars = mpc.Solve(state, coeffs);
-  // return 0;
+  // // TODO: 남은 trajectory 수가 window size보다 작을 때 처리
+  // for(long unsigned int i = 0; i < 50; i++){
 
-  for (size_t i = 0; i < iters; ++i) {
+  //   // renew trajectory
+  //   for(long unsigned int j = 0; j < window_size; j++)
+  //   {
+  //     cur_x_traj[j] = full_traj_x[i+j];
+  //     cur_y_traj[j] = full_traj_y[i+j];
+  //   }
 
-    auto vars = mpc.Solve(state, coeffs);
+  //   // parse mpc result
+  //   auto cur_traj_tup = std::make_tuple(x, y);
+  //   auto vars = mpc.Solve(state, cur_traj_tup);
 
-    cout << "x = " << vars[0] << endl;
-    cout << "y = " << vars[1] << endl;
-    cout << "psi = " << vars[2] << endl;
-    cout << "v = " << vars[3] << endl;
-    cout << "w = " << vars[4] << endl;
-    cout << "cte = " << vars[5] << endl;
-    cout << "epsi = " << vars[6] << endl;
-    cout << "a = " << vars[7] << endl;
-    cout << "alpha = " << vars[8] << endl;
-    cout << endl;
+  //   // update state
 
-    auto cur_x = vars[0];
-    auto cur_y = vars[1];
-    auto cur_psi = vars[2];
-    auto cur_v = vars[3];
-    auto cur_w = vars[4];
-    auto cur_cte = vars[5];
-    auto cur_epsi = vars[6];
-    auto cur_a = vars[7];
-    auto cur_alpha = vars[8];
 
-    x_vals.push_back(cur_x);
-    y_vals.push_back(cur_y);
-    psi_vals.push_back(cur_psi);
-    v_vals.push_back(cur_v);
-    w_vals.push_back(cur_w);
-    cte_vals.push_back(cur_cte);
-    epsi_vals.push_back(cur_epsi);
-    a_vals.push_back(cur_a);
-    alpha_vals.push_back(cur_alpha);
+  //   plt::clf();
+  //   plt::xlim(-1, 50);
+  //   plt::grid(true); //show grid
+  //   plt::plot(cur_x_traj, cur_y_traj, "r"); //plot the x,y
+  //   plt::pause(0.01);
 
-    // update state
-    state << vars[0], vars[1], vars[2], vars[3], vars[4], vars[5], vars[6];
-  }
+  // }
 
-  auto gt_traj = GetTrajPointsLine(0, traj_sampling_num, traj_sampling_num);
-  auto gt_x = std::get<0>(gt_traj);
-  auto gt_y = std::get<1>(gt_traj);
-
-  std::cout << coeffs << std::endl;
-
-  if (true){
-    plt::figure(1);
-    plt::subplot(3, 1, 1);
-    plt::title("X Values");
-    plt::plot(x_vals);
-    plt::subplot(3, 1, 2);
-    plt::title("Y Values");
-    plt::plot(y_vals);
-    plt::subplot(3, 1, 3);
-    plt::title("PSI Values");
-    plt::plot(psi_vals);
-
-    plt::figure(2);
-    plt::subplot(2, 1, 1);
-    plt::title("V");
-    plt::plot(v_vals);
-    plt::subplot(2, 1, 2);
-    plt::title("W");
-    plt::plot(w_vals);
-
-    plt::figure(3);
-    plt::subplot(2, 1, 1);
-    plt::title("CTE");
-    plt::plot(cte_vals);
-    plt::subplot(2, 1, 2);
-    plt::title("EPSI");
-    plt::plot(epsi_vals);
-
-    plt::figure(4);
-    plt::subplot(2, 1, 1);
-    plt::title("Acc");
-    plt::plot(a_vals);
-    plt::subplot(2, 1, 2);
-    plt::title("Anaugular Acc");
-    plt::plot(alpha_vals);
-
-    plt::figure(5);
-    plt::plot(gt_x, gt_y, "r--"); //plot the x,y
-    plt::plot(x_vals, y_vals); //plot the x,y
-    plt::grid(true); //show grid
-
-    plt::show();
-  }
+  // plt::figure(1);
+  // plt::show();
 
   return 0;
 }
