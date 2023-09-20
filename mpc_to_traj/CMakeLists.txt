@@ -32,7 +32,7 @@ add_executable(mpc_traj_line src/line_main.cpp src/MPC.cpp)
 target_include_directories(mpc_traj_line PRIVATE ${Python3_INCLUDE_DIRS})
 target_link_libraries(mpc_traj_line PRIVATE Python3::Python ipopt)
 
-add_executable(mpc_traj_line_qd src/line_main_qd.cpp src/MPC.cpp)
+add_executable(mpc_traj_line_qd src/line_main_qd.cpp src/MPCQD.cpp)
 target_include_directories(mpc_traj_line_qd PRIVATE ${Python3_INCLUDE_DIRS})
 target_link_libraries(mpc_traj_line_qd PRIVATE Python3::Python ipopt)
 

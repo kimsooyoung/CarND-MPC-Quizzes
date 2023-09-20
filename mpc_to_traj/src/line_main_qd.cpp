@@ -3,7 +3,7 @@
 #include <vector>
 #include "traj_helper.h"
 #include "helpers.h"
-#include "MPCQP.h"
+#include "MPCQD.h"
 
 namespace plt = matplotlibcpp;
 
@@ -81,7 +81,7 @@ int main() {
   state << x, y, psi, v_x, v_y, w, cte_x, cte_y;
 
   // create mpc instance
-  MPC mpc;
+  MPCQD mpc;
   // TODO Parameter Setup
   // mpc.LoadParams(mpc_params);
 
