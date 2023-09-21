@@ -24,15 +24,10 @@ using std::string;
 
 int main() {
 
-  // const double pi = M_PI;
-
   const int window_size = 20;
   const int iters = 200; // 200
   const double dt = 0.1;
   const double ref_v = 0.2; // v_xy
-
-  // int traj_sampling_num = int(iters * dt);
-  // int traj_sampling_num = 100;
 
   // Retrieve Full Trajectory
   // 10m를 200번만에 간다고 하자.
@@ -60,14 +55,6 @@ int main() {
       robot_frame_x_traj[j] = full_traj_x[0 + j] * cospsi + full_traj_y[0 + j] * sinpsi - x * cospsi - y * sinpsi;
       robot_frame_y_traj[j] = -full_traj_x[0 + j] * sinpsi + full_traj_y[0 + j] * cospsi + x * sinpsi - y * cospsi;
   }
-
-  // for(auto x : robot_frame_x_traj)
-  //   std::cout << x << " ";
-  // std::cout << std::endl;
-
-  // for(auto y : robot_frame_y_traj)
-  //   std::cout << y << " ";
-  // std::cout << std::endl;
 
   double cte_x = robot_frame_x_traj[0];
   double cte_y = robot_frame_x_traj[0];
