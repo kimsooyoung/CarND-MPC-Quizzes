@@ -28,11 +28,21 @@ private:
   double ref_v_;
 
 public:
-  tuple<vector<double>, vector<double>> trajs_;
+  vector<double> traj_x_;
+  vector<double> traj_y_;
 
   FG_eval(tuple<vector<double>, vector<double>> trajs) { 
-    trajs_ = trajs; 
-    
+    traj_x_ = std::get<0>(trajs);
+    traj_y_ = std::get<1>(trajs);
+
+    for(auto x : traj_x_)
+      std::cout << x << " ";
+    std::cout << std::endl;
+
+    for(auto y: traj_y_)
+      std::cout << y << " ";
+    std::cout << std::endl;
+
     mpc_step_ = 40;
 
     x_start_     = 0;
@@ -54,7 +64,7 @@ public:
     dt = params.find("DT") != params.end() ? params.at("DT") : dt;
     
     _w_cte_x   = params.find("W_CTE_X") != params.end() ? params.at("W_CTE_X") : _w_cte_x;
-    _w_cte_y   = params.find("W_CTE_y") != params.end() ? params.at("W_CTE_y") : _w_cte_y;
+    _w_cte_y   = params.find("W_CTE_Y") != params.end() ? params.at("W_CTE_Y") : _w_cte_y;
     _w_vel   = params.find("W_V") != params.end() ? params.at("W_V") : _w_vel;
 
     _w_ax = params.find("W_AX") != params.end() ? params.at("W_AX") : _w_ax;
@@ -65,21 +75,21 @@ public:
     _w_delta_ay = params.find("W_DELTA_AY") != params.end() ? params.at("W_DELTA_AY") : _w_delta_ay;
     _w_delta_alpha = params.find("W_DELTA_ALPHA") != params.end() ? params.at("W_DELTA_ALPHA") : _w_delta_alpha;
 
-    std::cout << "[FG_eval] mpc_step : " << mpc_step_ << std::endl;
-    std::cout << "[FG_eval] ref_v : " << ref_v_ << std::endl;
-    std::cout << "[FG_eval] dt : " << dt << std::endl;
+    // std::cout << "[FG_eval] mpc_step : " << mpc_step_ << std::endl;
+    // std::cout << "[FG_eval] ref_v : " << ref_v_ << std::endl;
+    // std::cout << "[FG_eval] dt : " << dt << std::endl;
 
-    std::cout << "[FG_eval] _w_cte_x : " << _w_cte_x << std::endl;
-    std::cout << "[FG_eval] _w_cte_y : " << _w_cte_y << std::endl;
-    std::cout << "[FG_eval] _w_vel : " << _w_vel << std::endl;
+    // std::cout << "[FG_eval] _w_cte_x : " << _w_cte_x << std::endl;
+    // std::cout << "[FG_eval] _w_cte_y : " << _w_cte_y << std::endl;
+    // std::cout << "[FG_eval] _w_vel : " << _w_vel << std::endl;
 
-    std::cout << "[FG_eval] _w_ax : " << _w_ax << std::endl;
-    std::cout << "[FG_eval] _w_ay : " << _w_ay << std::endl;
-    std::cout << "[FG_eval] _w_alpha : " << _w_alpha << std::endl;
+    // std::cout << "[FG_eval] _w_ax : " << _w_ax << std::endl;
+    // std::cout << "[FG_eval] _w_ay : " << _w_ay << std::endl;
+    // std::cout << "[FG_eval] _w_alpha : " << _w_alpha << std::endl;
     
-    std::cout << "[FG_eval] _w_delta_ax : " << _w_delta_ax << std::endl;
-    std::cout << "[FG_eval] _w_delta_ay : " << _w_delta_ay << std::endl;
-    std::cout << "[FG_eval] _w_delta_alpha : " << _w_delta_alpha << std::endl;
+    // std::cout << "[FG_eval] _w_delta_ax : " << _w_delta_ax << std::endl;
+    // std::cout << "[FG_eval] _w_delta_ay : " << _w_delta_ay << std::endl;
+    // std::cout << "[FG_eval] _w_delta_alpha : " << _w_delta_alpha << std::endl;
 
     x_start_     = 0;
     y_start_     = x_start_   + mpc_step_;
@@ -131,9 +141,6 @@ public:
     fg[1 + cte_x_start_] = vars[cte_x_start_];
     fg[1 + cte_y_start_] = vars[cte_y_start_];
 
-    auto traj_x = std::get<0>(trajs_);
-    auto traj_y = std::get<1>(trajs_);
-
     for (auto t = 1; t < mpc_step_; ++t) {
 
       AD<double> x1 = vars[x_start_ + t];
@@ -164,8 +171,10 @@ public:
       fg[1 + vx_start_ + t] = vx1 - (vx0 + ax0 * dt);
       fg[1 + vy_start_ + t] = vy1 - (vy0 + ay0 * dt);
       fg[1 + w_start_ + t] = w1 - (w0 + alpha0 * dt);
-      fg[1 + cte_x_start_ + t] = cte_x1 - (cte_x0 - traj_x[t-1]);
-      fg[1 + cte_y_start_ + t] = cte_y1 - (cte_y0 - traj_y[t-1]);
+      fg[1 + cte_x_start_ + t] = cte_x1 - (traj_x_[t-1] - x0);
+      fg[1 + cte_y_start_ + t] = cte_y1 - (traj_y_[t-1] - y0);
+
+      // std::cout << "traj_x_[t-1] - cte_x0 : " << traj_x_[t-1] - cte_x0 << std::endl;
     }
   }
 };
@@ -202,6 +211,12 @@ void MPCQD::LoadParams(const std::map<std::string, double> &params){
   alpha_start_ = ay_start_ + mpc_step_ - 1;
 
   std::cout << "[MPC] mpc_step : " << mpc_step_ << std::endl;
+  std::cout << "[MPC] min_acc_x : " << min_acc_x_ << std::endl;
+  std::cout << "[MPC] max_acc_x : " << max_acc_x_ << std::endl;
+  std::cout << "[MPC] min_acc_y : " << min_acc_y_ << std::endl;
+  std::cout << "[MPC] max_acc_y : " << max_acc_y_ << std::endl;
+  std::cout << "[MPC] min_ang_acc : " << min_ang_acc_ << std::endl;
+  std::cout << "[MPC] max_ang_acc : " << max_ang_acc_ << std::endl;
 }
 
 std::vector<double> MPCQD::Solve(const VectorXd &x0, const tuple<vector<double>, vector<double>> &trajs) {

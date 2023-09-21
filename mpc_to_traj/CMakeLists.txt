@@ -28,6 +28,10 @@ add_executable(line_traj src/line_traj.cpp)
 target_include_directories(line_traj PRIVATE ${Python3_INCLUDE_DIRS})
 target_link_libraries(line_traj PRIVATE Python3::Python)
 
+add_executable(l_shape_traj src/l_shape_traj.cpp)
+target_include_directories(l_shape_traj PRIVATE ${Python3_INCLUDE_DIRS})
+target_link_libraries(l_shape_traj PRIVATE Python3::Python)
+
 add_executable(mpc_traj_line src/line_main.cpp src/MPC.cpp)
 target_include_directories(mpc_traj_line PRIVATE ${Python3_INCLUDE_DIRS})
 target_link_libraries(mpc_traj_line PRIVATE Python3::Python ipopt)

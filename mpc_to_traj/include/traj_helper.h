@@ -73,3 +73,33 @@ tuple<vector<double>, vector<double>> GetTrajPointsLineWithOption(
 
     return std::make_tuple(x, y);
 }
+
+// L shape trajectory
+
+tuple<vector<double>, vector<double>> GetTrajPointsLShape(
+    const int &start,
+    const int &point_num,
+    const double &distance,
+    const int &sampling_num
+){
+    vector<double> x(point_num);
+    vector<double> y(point_num);
+
+    auto dx = distance / point_num;
+
+    for(int i = 0; i < point_num; ++i)
+    {
+        if(i < point_num / 2)
+        {
+            x[i] = dx * i + start;
+            y[i] = 10;
+        }
+        else
+        {
+            x[i] = dx * point_num / 2 + start;
+            y[i] = 10 - dx * (i - point_num / 2);
+        }
+    }
+
+    return std::make_tuple(x, y);
+}

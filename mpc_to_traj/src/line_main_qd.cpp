@@ -29,14 +29,14 @@ int main() {
   const int window_size = 20;
   const int iters = 200; // 200
   const double dt = 0.1;
-  const double ref_v = 1.5; // v_xy
+  const double ref_v = 0.5; // v_xy
 
   // int traj_sampling_num = int(iters * dt);
   int traj_sampling_num = 100;
 
   // Retrieve Full Trajectory
   // 10m를 200번만에 간다고 하자.
-  auto traj_points = GetTrajPointsLineWithOption(0, iters, 10.0, iters);
+  auto traj_points = GetTrajPointsLShape(0, iters, 20.0, iters);
   auto full_traj_x = std::get<0>(traj_points);
   auto full_traj_y = std::get<1>(traj_points);
 
@@ -51,30 +51,31 @@ int main() {
 
   // initial state 선언
   double x = 0.0;
-  double y = 0.0;
+  // double y = 0.0;
+  double y = 10.0;
   double psi = 0.0;
   double v_x = 0.0;
   double v_y = 0.0;
   double w = 0.0;
-  double cte_x = 0.0;
-  double cte_y = 0.0;
+  double cte_x = cur_x_traj[0] - x;
+  double cte_y = cur_y_traj[0] - y;
   
-  // trajectory를 robot frame으로 변환
+  // TODO: trajectory를 robot frame으로 변환
   // initial trajectory transformation
-  double cospsi = cos(psi);
-  double sinpsi = sin(psi);
+  // double cospsi = cos(psi);
+  // double sinpsi = sin(psi);
   
-  vector<double> robot_frame_x_traj(window_size);
-  vector<double> robot_frame_y_traj(window_size);
+  // vector<double> robot_frame_x_traj(window_size);
+  // vector<double> robot_frame_y_traj(window_size);
 
-  for(long unsigned int i = 0; i < window_size; ++i)
-  {
-    const double dx = cur_x_traj[i] - x;
-    const double dy = cur_y_traj[i] - y;
+  // for(long unsigned int i = 0; i < window_size; ++i)
+  // {
+  //   const double dx = cur_x_traj[i] - x;
+  //   const double dy = cur_y_traj[i] - y;
 
-    robot_frame_x_traj[i] = dx * cospsi + dy * sinpsi;
-    robot_frame_y_traj[i] = dy * cospsi - dx * sinpsi;
-  }
+  //   robot_frame_x_traj[i] = dx * cospsi + dy * sinpsi;
+  //   robot_frame_y_traj[i] = dy * cospsi - dx * sinpsi;
+  // }
   
   // MPC 구현
   VectorXd state(8);
@@ -108,9 +109,13 @@ int main() {
   mpc.LoadParams(mpc_params);
 
   // parse mpc result
-  auto cur_traj_tup = std::make_tuple(robot_frame_x_traj, robot_frame_y_traj);
+  auto cur_traj_tup = std::make_tuple(cur_x_traj, cur_y_traj);
   
-  for(long unsigned int i = 0; i < 10; ++i)
+  // output container
+  vector<double> x_vals = {state[0]};
+  vector<double> y_vals = {state[1]};
+
+  for(long unsigned int i = 0; i < iters; ++i)
   {
     auto vars = mpc.Solve(state, cur_traj_tup);
 
@@ -120,8 +125,38 @@ int main() {
     auto cur_vx = vars[3];
     auto cur_vy = vars[4];
     auto cur_w = vars[5];
-    auto cur_cte_x = vars[6];
-    auto cur_cte_y = vars[7];
+
+    // renew trajectory
+    // TODO: 남은 trajectory 수가 window size보다 작을 때 처리
+    if(i + window_size >= iters){
+      int overlap_num = i + window_size - iters + 1;
+
+      for(long unsigned int j = 0; j < window_size - overlap_num; j++)
+      {
+        cur_x_traj[j] = full_traj_x[i + j];
+        cur_y_traj[j] = full_traj_y[i + j];
+      }
+      auto last_x_traj = cur_x_traj[window_size - overlap_num - 1];
+      auto last_y_traj = cur_y_traj[window_size - overlap_num - 1];
+
+      for(long unsigned int j = 0; j < overlap_num; j++)
+      {
+        cur_x_traj[window_size - overlap_num + j] = last_x_traj;
+        cur_y_traj[window_size - overlap_num + j] = last_y_traj;
+      }
+    }
+    else{
+      for(long unsigned int j = 0; j < window_size; j++)
+      {
+        cur_x_traj[j] = full_traj_x[i + j];
+        cur_y_traj[j] = full_traj_y[i + j];
+      }
+    }
+    
+    cur_traj_tup = std::make_tuple(cur_x_traj, cur_y_traj);
+
+    auto cur_cte_x = cur_x_traj[0] - cur_x;
+    auto cur_cte_y = cur_y_traj[0] - cur_y;
 
     std::cout << "cur_x : " << cur_x << std::endl;
     std::cout << "cur_y : " << cur_y << std::endl;
@@ -133,35 +168,17 @@ int main() {
     std::cout << "cur_cte_y : " << cur_cte_y << std::endl;
 
     state << cur_x, cur_y, cur_psi, cur_vx, cur_vy, cur_w, cur_cte_x, cur_cte_y;
+
+    x_vals.push_back(cur_x);
+    y_vals.push_back(cur_y);
+
+    plt::xlim(-1, 15);
+    plt::ylim(-1, 15);
+    plt::grid(true); //show grid
+    plt::plot(full_traj_x, full_traj_y, "b");
+    plt::plot(x_vals, y_vals, "r"); //plot the x,y
+    plt::pause(0.01);
   }
   
-  // // TODO: 남은 trajectory 수가 window size보다 작을 때 처리
-  // for(long unsigned int i = 0; i < 50; i++){
-
-  //   // renew trajectory
-  //   for(long unsigned int j = 0; j < window_size; j++)
-  //   {
-  //     cur_x_traj[j] = full_traj_x[i+j];
-  //     cur_y_traj[j] = full_traj_y[i+j];
-  //   }
-
-  //   // parse mpc result
-  //   auto cur_traj_tup = std::make_tuple(x, y);
-  //   auto vars = mpc.Solve(state, cur_traj_tup);
-
-  //   // update state
-
-
-  //   plt::clf();
-  //   plt::xlim(-1, 50);
-  //   plt::grid(true); //show grid
-  //   plt::plot(cur_x_traj, cur_y_traj, "r"); //plot the x,y
-  //   plt::pause(0.01);
-
-  // }
-
-  // plt::figure(1);
-  // plt::show();
-
   return 0;
 }
