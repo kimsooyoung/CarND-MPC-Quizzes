@@ -47,3 +47,7 @@ target_link_libraries(mpc_traj_line_qd PRIVATE Python3::Python ipopt)
 add_executable(mpc_traj_circle src/circle_main.cpp src/MPC.cpp)
 target_include_directories(mpc_traj_circle PRIVATE ${Python3_INCLUDE_DIRS})
 target_link_libraries(mpc_traj_circle PRIVATE Python3::Python ipopt)
+
+add_executable(square_main_qd src/square_main_qd.cpp src/MPCQD.cpp)
+target_include_directories(square_main_qd PRIVATE ${Python3_INCLUDE_DIRS})
+target_link_libraries(square_main_qd PRIVATE Python3::Python ipopt)
