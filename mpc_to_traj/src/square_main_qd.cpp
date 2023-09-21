@@ -42,8 +42,7 @@ int main() {
 
   // initial state 선언
   double x = 0.0;
-  // double y = 0.0;
-  double y = 10.0;
+  double y = 0.0;
   double psi = 0.0;
   double v_x = 0.0;
   double v_y = 0.0;
@@ -53,20 +52,25 @@ int main() {
   vector<double> robot_frame_x_traj(window_size);
   vector<double> robot_frame_y_traj(window_size);
 
-  double cospsi = cos(psi);
-  double sinpsi = sin(psi);
+  double cospsi = cos(psi); // 1
+  double sinpsi = sin(psi); // 0
 
-  for(long unsigned int j = 0; j < window_size; ++j)
+  for(long unsigned int j = 0; j < window_size; j++) 
   {
-    const double dx = full_traj_x[0 + j] - x;
-    const double dy = full_traj_y[0 + j] - y;
-
-    robot_frame_x_traj[j] = dx * cospsi + dy * sinpsi;
-    robot_frame_y_traj[j] = dy * cospsi - dx * sinpsi;
+      robot_frame_x_traj[j] = full_traj_x[0 + j] * cospsi + full_traj_y[0 + j] * sinpsi - x * cospsi - y * sinpsi;
+      robot_frame_y_traj[j] = -full_traj_x[0 + j] * sinpsi + full_traj_y[0 + j] * cospsi + x * sinpsi - y * cospsi;
   }
 
-  double cte_x = robot_frame_x_traj[0] - x;
-  double cte_y = robot_frame_x_traj[0] - y;
+  // for(auto x : robot_frame_x_traj)
+  //   std::cout << x << " ";
+  // std::cout << std::endl;
+
+  // for(auto y : robot_frame_y_traj)
+  //   std::cout << y << " ";
+  // std::cout << std::endl;
+
+  double cte_x = robot_frame_x_traj[0];
+  double cte_y = robot_frame_x_traj[0];
   
   // MPC 구현
   VectorXd state(8);
@@ -112,6 +116,7 @@ int main() {
   vector<double> cur_x_traj(window_size);
   vector<double> cur_y_traj(window_size);
 
+  // auto vars = mpc.Solve(state, robot_traj_tup);
   for(long unsigned int i = 0; i < iters; ++i)
   {
     auto vars = mpc.Solve(state, robot_traj_tup);
@@ -123,8 +128,8 @@ int main() {
     auto cur_vy = vars[4];
     auto cur_w = vars[5];
 
-    x_world += cur_x * cos(psi_world);
-    y_world += cur_x * sin(psi_world);
+    x_world += cur_x * cos(psi_world) - cur_y * sin(psi_world);
+    y_world += cur_x * sin(psi_world) + cur_y * cos(psi_world);
     psi_world += cur_psi;
 
     // renew trajectory
@@ -175,20 +180,29 @@ int main() {
     std::cout << "cur_vy : " << cur_vy << std::endl;
     std::cout << "cur_w : " << cur_w << std::endl;
     std::cout << "cur_cte_x : " << cur_cte_x << std::endl;
-    std::cout << "cur_cte_y : " << cur_cte_y << std::endl;
+    std::cout << "cur_cte_y : " << cur_cte_y << std::endl << std::endl;
 
-    state << cur_x, cur_y, cur_psi, cur_vx, cur_vy, cur_w, cur_cte_x, cur_cte_y;
+    state << 0, 0, 0, cur_vx, cur_vy, cur_w, cur_cte_x, cur_cte_y;
 
-    x_vals.push_back(cur_x);
-    y_vals.push_back(cur_y);
+    x_vals.push_back(x_world);
+    y_vals.push_back(y_world);
 
     plt::xlim(-1, 15);
-    plt::ylim(-1, 15);
+    plt::ylim(-15, 1);
     plt::grid(true); //show grid
     plt::plot(full_traj_x, full_traj_y, "b");
     plt::plot(x_vals, y_vals, "r"); //plot the x,y
-    plt::pause(0.01);
+    plt::pause(0.05);
   }
+
+  plt::figure(1);
+  plt::xlim(-1, 15);
+  plt::ylim(-15, 1);
+  plt::grid(true); //show grid
+  plt::plot(full_traj_x, full_traj_y, "b");
+  plt::plot(x_vals, y_vals, "r"); //plot the x,y
+
+  plt::show();
   
   return 0;
 }

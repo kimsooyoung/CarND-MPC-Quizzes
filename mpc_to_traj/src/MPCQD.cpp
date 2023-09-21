@@ -35,13 +35,13 @@ public:
     traj_x_ = std::get<0>(trajs);
     traj_y_ = std::get<1>(trajs);
 
-    for(auto x : traj_x_)
-      std::cout << x << " ";
-    std::cout << std::endl;
+    // for(auto x : traj_x_)
+    //   std::cout << x << " ";
+    // std::cout << std::endl;
 
-    for(auto y: traj_y_)
-      std::cout << y << " ";
-    std::cout << std::endl;
+    // for(auto y: traj_y_)
+    //   std::cout << y << " ";
+    // std::cout << std::endl;
 
     mpc_step_ = 40;
 

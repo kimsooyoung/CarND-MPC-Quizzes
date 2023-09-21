@@ -32,22 +32,22 @@ tuple<vector<double>, vector<double>> GetTrajPointsSquareShape(
         if(i < point_num / 4)
         {
             x[i] = dx * i + start;
-            y[i] = 10;
+            y[i] = 0;
         }
         else if(i < point_num / 2)
         {
             x[i] = dx * point_num / 4 + start;
-            y[i] = 10 - dx * (i - point_num / 4);
+            y[i] = 0 - dx * (i - point_num / 4);
         }
         else if(i < point_num * 3 / 4)
         {
             x[i] = dx * point_num / 4 + start - dx * (i - point_num / 2);
-            y[i] = 10 - dx * point_num / 4;
+            y[i] = 0 - dx * point_num / 4;
         }
         else
         {
             x[i] = dx * point_num / 4 + start - dx * (point_num / 4);
-            y[i] = 10 - dx * point_num / 4 + dx * (i - point_num * 3 / 4);
+            y[i] = 0 - dx * point_num / 4 + dx * (i - point_num * 3 / 4);
         }
     }
 
