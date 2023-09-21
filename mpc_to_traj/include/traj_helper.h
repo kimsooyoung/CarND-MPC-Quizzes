@@ -76,6 +76,15 @@ tuple<vector<double>, vector<double>> GetTrajPointsLineWithOption(
 
 // L shape trajectory
 
+/**
+ * @brief Get the Traj Points L Shape object
+ * 
+ * @param start x start location
+ * @param point_num total points
+ * @param distance full path distance
+ * @param sampling_num subsampling numbers
+ * @return tuple<vector<double>, vector<double>> 
+ */
 tuple<vector<double>, vector<double>> GetTrajPointsLShape(
     const int &start,
     const int &point_num,
@@ -98,6 +107,45 @@ tuple<vector<double>, vector<double>> GetTrajPointsLShape(
         {
             x[i] = dx * point_num / 2 + start;
             y[i] = 10 - dx * (i - point_num / 2);
+        }
+    }
+
+    return std::make_tuple(x, y);
+}
+
+// square shape trajectory
+tuple<vector<double>, vector<double>> GetTrajPointsSquareShape(
+    const int &start,
+    const int &point_num,
+    const double &distance,
+    const int &sampling_num
+){ 
+    vector<double> x(point_num);
+    vector<double> y(point_num);
+
+    auto dx = distance / point_num;
+
+    for(int i = 0; i < point_num; ++i)
+    {
+        if(i < point_num / 4)
+        {
+            x[i] = dx * i + start;
+            y[i] = 10;
+        }
+        else if(i < point_num / 2)
+        {
+            x[i] = dx * point_num / 4 + start;
+            y[i] = 10 - dx * (i - point_num / 4);
+        }
+        else if(i < point_num * 3 / 4)
+        {
+            x[i] = dx * point_num / 4 + start - dx * (i - point_num / 2);
+            y[i] = 10 - dx * point_num / 4;
+        }
+        else
+        {
+            x[i] = dx * point_num / 4 + start - dx * (point_num / 4);
+            y[i] = 10 - dx * point_num / 4 + dx * (i - point_num * 3 / 4);
         }
     }
 
