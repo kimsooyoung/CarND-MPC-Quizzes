@@ -36,6 +36,10 @@ add_executable(square_shape_traj src/square_shape_traj.cpp)
 target_include_directories(square_shape_traj PRIVATE ${Python3_INCLUDE_DIRS})
 target_link_libraries(square_shape_traj PRIVATE Python3::Python)
 
+add_executable(diagonal_traj src/diagonal_traj.cpp)
+target_include_directories(diagonal_traj PRIVATE ${Python3_INCLUDE_DIRS})
+target_link_libraries(diagonal_traj PRIVATE Python3::Python)
+
 add_executable(mpc_traj_line src/line_main.cpp src/MPC.cpp)
 target_include_directories(mpc_traj_line PRIVATE ${Python3_INCLUDE_DIRS})
 target_link_libraries(mpc_traj_line PRIVATE Python3::Python ipopt)
@@ -51,3 +55,7 @@ target_link_libraries(mpc_traj_circle PRIVATE Python3::Python ipopt)
 add_executable(square_main_qd src/square_main_qd.cpp src/MPCQD.cpp)
 target_include_directories(square_main_qd PRIVATE ${Python3_INCLUDE_DIRS})
 target_link_libraries(square_main_qd PRIVATE Python3::Python ipopt)
+
+add_executable(diagonal_main_qd src/diagonal_main_qd.cpp src/MPCQD.cpp)
+target_include_directories(diagonal_main_qd PRIVATE ${Python3_INCLUDE_DIRS})
+target_link_libraries(diagonal_main_qd PRIVATE Python3::Python ipopt)

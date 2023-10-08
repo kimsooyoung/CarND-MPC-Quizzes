@@ -152,3 +152,23 @@ tuple<vector<double>, vector<double>> GetTrajPointsSquareShape(
     return std::make_tuple(x, y);
 }
 
+// diagonal shape trajectory
+tuple<vector<double>, vector<double>> GetTrajPointsDiagonal(
+    const int &start,
+    const int &point_num,
+    const double &distance,
+    const int &sampling_num
+){
+    vector<double> x(point_num);
+    vector<double> y(point_num);
+
+    auto dx = distance / point_num;
+
+    for(int i = 0; i < point_num; ++i)
+    {
+        x[i] = dx * i + start;
+        y[i] = dx * i + start;
+    }
+
+    return std::make_tuple(x, y);
+}
