@@ -22,6 +22,8 @@ using std::string;
 // 5. update states
 // 6. plot results
 
+bool plot_result = true;
+
 int main() {
 
   const int window_size = 20;
@@ -97,8 +99,19 @@ int main() {
   double x_world = 0;
   double y_world = 0;
   double psi_world = 0;
+
+  // state << x, y, psi, v_x, v_y, w, cte_x, cte_y;
   vector<double> x_vals = {state[0]};
   vector<double> y_vals = {state[1]};
+  vector<double> psi_vals = {state[2]};
+  vector<double> vx_vals = {state[3]};
+  vector<double> vy_vals = {state[4]};
+  vector<double> w_vals = {state[5]};
+  vector<double> cte_x_vals = {state[6]};
+  vector<double> cte_y_vals = {state[7]};
+  vector<double> a_x_vals;
+  vector<double> a_y_vals;
+  vector<double> alpha_vals;
 
   vector<double> cur_x_traj(window_size);
   vector<double> cur_y_traj(window_size);
@@ -114,6 +127,10 @@ int main() {
     auto cur_vx = vars[3];
     auto cur_vy = vars[4];
     auto cur_w = vars[5];
+    // auto cur_cte_x = vars[6];
+    // auto cur_cte_y = vars[7];
+    auto cur_a_x = vars[8];
+    auto cur_a_y = vars[9];
 
     x_world += cur_x * cos(psi_world) - cur_y * sin(psi_world);
     y_world += cur_x * sin(psi_world) + cur_y * cos(psi_world);
@@ -171,15 +188,25 @@ int main() {
 
     state << 0, 0, 0, cur_vx, cur_vy, cur_w, cur_cte_x, cur_cte_y;
 
+    // state << x, y, psi, v_x, v_y, w, cte_x, cte_y;
     x_vals.push_back(x_world);
     y_vals.push_back(y_world);
+    psi_vals.push_back(psi_world);
+    vx_vals.push_back(cur_vx);
+    vy_vals.push_back(cur_vy);
+    w_vals.push_back(cur_w);
+    cte_x_vals.push_back(cur_cte_x);
+    cte_y_vals.push_back(cur_cte_y);
+    a_x_vals.push_back(cur_a_x);
+    a_y_vals.push_back(cur_a_y);
+    alpha_vals.push_back(cur_psi);
 
-    plt::xlim(-1, 15);
-    plt::ylim(-15, 1);
-    plt::grid(true); //show grid
-    plt::plot(full_traj_x, full_traj_y, "b");
-    plt::plot(x_vals, y_vals, "r"); //plot the x,y
-    plt::pause(0.05);
+    // plt::xlim(-1, 15);
+    // plt::ylim(-15, 1);
+    // plt::grid(true); //show grid
+    // plt::plot(full_traj_x, full_traj_y, "b");
+    // plt::plot(x_vals, y_vals, "r"); //plot the x,y
+    // plt::pause(0.05);
   }
 
   plt::figure(1);
@@ -188,6 +215,50 @@ int main() {
   plt::grid(true); //show grid
   plt::plot(full_traj_x, full_traj_y, "b");
   plt::plot(x_vals, y_vals, "r"); //plot the x,y
+
+
+  if (plot_result){
+    plt::figure(2);
+    plt::subplot(3, 4, 1);
+    plt::title("X Values");
+    plt::plot(x_vals);
+    plt::subplot(3, 4, 5);
+    plt::title("Y Values");
+    plt::plot(y_vals);
+    plt::subplot(3, 4, 9);
+    plt::title("PSI Values");
+    plt::plot(psi_vals);
+
+    plt::subplot(3, 4, 2);
+    plt::title("vx");
+    plt::plot(vx_vals, "r");
+    plt::subplot(3, 4, 6);
+    plt::title("vy");
+    plt::plot(vy_vals, "r");
+    plt::subplot(3, 4, 10);
+    plt::title("W");
+    plt::plot(w_vals, "r");
+
+    plt::subplot(3, 4, 3);
+    plt::title("Acc X");
+    plt::plot(a_x_vals, "b");
+    plt::subplot(3, 4, 7);
+    plt::title("Acc Y");
+    plt::plot(a_y_vals, "b");
+    plt::subplot(3, 4, 11);
+    plt::title("Anaugular Acc");
+    plt::plot(alpha_vals, "b");
+
+    plt::subplot(2, 4, 4);
+    plt::title("CTE");
+    plt::plot(cte_x_vals, "g");
+    plt::subplot(2, 4, 8);
+    plt::title("CTE");
+    plt::plot(cte_y_vals, "g");
+
+    plt::show();
+  }
+
 
   plt::show();
   
