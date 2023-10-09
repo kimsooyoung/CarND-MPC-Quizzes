@@ -23,6 +23,7 @@ private:
   double _w_cte_x, _w_cte_y, _w_vel;
   double _w_ax, _w_ay, _w_alpha;
   double _w_delta_ax, _w_delta_ay, _w_delta_alpha;
+  double _w_delta_vx, _w_delta_vy;
 
   double dt;
   double ref_v_;
@@ -75,6 +76,9 @@ public:
     _w_delta_ay = params.find("W_DELTA_AY") != params.end() ? params.at("W_DELTA_AY") : _w_delta_ay;
     _w_delta_alpha = params.find("W_DELTA_ALPHA") != params.end() ? params.at("W_DELTA_ALPHA") : _w_delta_alpha;
 
+    _w_delta_vx = params.find("W_DELTA_VX") != params.end() ? params.at("W_DELTA_VX") : _w_delta_vx;
+    _w_delta_vy = params.find("W_DELTA_VY") != params.end() ? params.at("W_DELTA_VY") : _w_delta_vy;
+
     // std::cout << "[FG_eval] mpc_step : " << mpc_step_ << std::endl;
     // std::cout << "[FG_eval] ref_v : " << ref_v_ << std::endl;
     // std::cout << "[FG_eval] dt : " << dt << std::endl;
@@ -90,6 +94,9 @@ public:
     // std::cout << "[FG_eval] _w_delta_ax : " << _w_delta_ax << std::endl;
     // std::cout << "[FG_eval] _w_delta_ay : " << _w_delta_ay << std::endl;
     // std::cout << "[FG_eval] _w_delta_alpha : " << _w_delta_alpha << std::endl;
+    
+    // std::cout << "[FG_eval] _w_delta_vx : " << _w_delta_vx << std::endl;
+    // std::cout << "[FG_eval] _w_delta_vy : " << _w_delta_vy << std::endl;
 
     x_start_     = 0;
     y_start_     = x_start_   + mpc_step_;
@@ -124,6 +131,9 @@ public:
       fg[0] += _w_ax * CppAD::pow(vars[ax_start_ + i], 2);
       fg[0] += _w_ay * CppAD::pow(vars[ay_start_ + i], 2);
       fg[0] += _w_alpha * CppAD::pow(vars[alpha_start_ + i], 2);
+
+      fg[0] += _w_delta_vx * CppAD::pow(vars[vx_start_ + i + 1] - vars[vx_start_ + i], 2);
+      fg[0] += _w_delta_vy * CppAD::pow(vars[vy_start_ + i + 1] - vars[vy_start_ + i], 2);
     }
 
     for (auto i = 0; i < mpc_step_ - 2; i++){

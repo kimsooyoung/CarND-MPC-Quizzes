@@ -88,6 +88,9 @@ int main() {
   mpc_params["W_DELTA_AY"] = 1.0;
   mpc_params["W_DELTA_ALPHA"] = 1.0;
 
+  mpc_params["W_DELTA_VX"] = 4000.0;
+  mpc_params["W_DELTA_VY"] = 4000.0;
+
   // create mpc instance
   MPCQD mpc;
   mpc.LoadParams(mpc_params);
@@ -201,12 +204,12 @@ int main() {
     a_y_vals.push_back(cur_a_y);
     alpha_vals.push_back(cur_psi);
 
-    plt::xlim(-1, 22);
-    plt::ylim(-1, 22);
-    plt::grid(true); //show grid
-    plt::plot(full_traj_x, full_traj_y, "b");
-    plt::plot(x_vals, y_vals, "r"); //plot the x,y
-    plt::pause(0.05);
+    // plt::xlim(-1, 22);
+    // plt::ylim(-1, 22);
+    // plt::grid(true); //show grid
+    // plt::plot(full_traj_x, full_traj_y, "b");
+    // plt::plot(x_vals, y_vals, "r"); //plot the x,y
+    // plt::pause(0.05);
   }
 
   plt::figure(1);
@@ -218,7 +221,8 @@ int main() {
 
 
   if (plot_result){
-    plt::figure(2);
+    // plt::figure(2);
+    plt::figure_size(1600, 800);
     plt::subplot(3, 4, 1);
     plt::title("X Values");
     plt::plot(x_vals);
